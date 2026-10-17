@@ -1,0 +1,80 @@
+# Préproduction : la pile de docker-compose.yml, sans l'ingestion ni pgAdmin,
+# avec seulement les interfaces web publiées. Les URL publiques (PREPROD_HOST)
+# sont celles qu'ouvre le navigateur, joignable sur le réseau privé (tailnet).
+#   docker compose -f docker-compose.yml -f docker-compose.preprod.yml --env-file .env.preprod up -d --build
+# Réglages : .env.preprod (modèle : .env.preprod.example, jamais commité).
+name: thot-preprod
+
+x-urls:
+  reader: &reader-url http://${PREPROD_HOST:?set in .env.preprod}:${READER_PORT:-8000}
+  console: &console-url http://${PREPROD_HOST}:${CONSOLE_PORT:-8001}
+  issuer: &issuer http://${PREPROD_HOST}:${KEYCLOAK_PORT:-8002}/realms/thot
+
+services:
+  # Les noms fixes du compose de base (thot_postgres…) sont retirés partout : la
+  # préprod (projet thot-preprod) et les piles de dev des worktrees cohabitent.
+
+  # Internes : rien n'est publié, les conteneurs se joignent par le réseau compose.
+  postgres:
+    container_name: !reset null
+    ports: !reset []
+  qdrant:
+    container_name: !reset null
+    ports: !reset []
+  garage:
+    container_name: !reset null
+    ports: !reset []
+  migrate:
+    container_name: !reset null
+  databases:
+    container_name: !reset null
+  buckets:
+    container_name: !reset null
+
+  # Hors préprod : l'ingestion (commande et worker de la file `jobs`) et pgAdmin.
+  # Le profil `never` n'est jamais activé.
+  ingest-worker:
+    profiles: ["never"]
+  pgadmin:
+    profiles: ["never"]
+
+  # Interfaces web, publiées sur les ports de la préprod.
+  keycloak:
+    container_name: !reset null
+    # Mode production (pas start-dev) : HTTP permis sur le réseau privé, pas de TLS.
+    command: ["start", "--import-realm", "--http-enabled=true"]
+    environment:
+      KC_HOSTNAME: http://${PREPROD_HOST}:${KEYCLOAK_PORT:-8002}
+      THOT_READER_URL: *reader-url
+      THOT_CONSOLE_URL: *console-url
+    ports: !override
+      - "${KEYCLOAK_PORT:-8002}:8080"
+
+  api:
+    container_name: !reset null
+    environment:
+      OIDC_ISSUER: *issuer
+      AUTH_DISABLED: "false"
+    ports: !override
+      - "${API_PORT:-8003}:8000"
+
+  reader:
+    container_name: !reset null
+    environment: &reader-env
+      BETTER_AUTH_URL: *reader-url
+      OIDC_ISSUER: *issuer
+    ports: !override
+      - "${READER_PORT:-8000}:3000"
+
+  reader-worker:
+    container_name: !reset null
+    environment: *reader-env
+
+  console:
+    container_name: !reset null
+    environment:
+      BETTER_AUTH_URL: *console-url
+      OIDC_ISSUER: *issuer
+      READER_URL: *reader-url
+    ports: !override
+      - "${CONSOLE_PORT:-8001}:3001"

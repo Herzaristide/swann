@@ -122,24 +122,60 @@ services:
       timeout: 5s
       retries: 5
 
-  minio:
-    image: minio/minio:latest
-    container_name: thot_minio
+  # Stockage S3 des EPUB (Garage, un seul nœud ; MinIO ne publie plus d'images).
+  # Au premier démarrage, Garage crée lui-même son plan de nœud, la clé d'accès
+  # S3_ACCESS_KEY / S3_SECRET_KEY et le bucket des livres ; `buckets` ajoute la boîte
+  # de dépôt. Formats imposés par Garage : clé `GK` + 24 hexa, secrets de 64 hexa.
+  # Pas de valeur par défaut : ces trois variables sont exigées (voir .env.example).
+  garage:
+    image: dxflrs/garage:v2.4.1
+    container_name: thot_garage
     restart: unless-stopped
-    command: server /data --console-address ":9001"
+    command: ["/garage", "server", "--single-node", "--default-bucket"]
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-thot}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-me}
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET:?set in .env}
+      GARAGE_DEFAULT_ACCESS_KEY: ${S3_ACCESS_KEY:?set in .env}
+      GARAGE_DEFAULT_SECRET_KEY: ${S3_SECRET_KEY:?set in .env}
+      GARAGE_DEFAULT_BUCKET: ${MINIO_BOOKS_BUCKET:-books}
     ports:
-      - "${MINIO_API_PORT:-9000}:9000"     # API S3
-      - "${MINIO_CONSOLE_PORT:-9001}:9001" # Console web
+      - "${S3_PORT:-3900}:3900"   # API S3
     volumes:
-      - minio_data:/data
+      - ./garage/garage.toml:/etc/garage.toml:ro
+      - garage_meta:/var/lib/garage/meta
+      - garage_data:/var/lib/garage/data
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD", "/garage", "health"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # Crée les buckets manquants (livres, boîte de dépôt de la console) avec le code
+  # de thot, puis s'arrête. Même image que l'API.
+  buckets:
+    build:
+      context: .
+      dockerfile: corpus-api/Dockerfile
+    image: thot-api
+    container_name: thot_buckets
+    depends_on:
+      garage:
+        condition: service_healthy
+    environment:
+      MINIO_ENDPOINT: http://garage:3900
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:?set in .env}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:?set in .env}
+      MINIO_BOOKS_BUCKET: ${MINIO_BOOKS_BUCKET:-books}
+      MINIO_INBOX_BUCKET: ${MINIO_INBOX_BUCKET:-inbox}
+    command:
+      - python
+      - -c
+      - |
+        import os
+        from thot_core import s3
+        mc = s3.client(os.environ["MINIO_ENDPOINT"], os.environ["MINIO_ROOT_USER"], os.environ["MINIO_ROOT_PASSWORD"])
+        for bucket in (os.environ["MINIO_BOOKS_BUCKET"], os.environ["MINIO_INBOX_BUCKET"]):
+            s3.ensure_bucket(mc, bucket)
+    restart: "no"
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -176,8 +212,8 @@ services:
         condition: service_completed_successfully
       qdrant:
         condition: service_healthy
-      minio:
-        condition: service_healthy
+      buckets:
+        condition: service_completed_successfully
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-thot}:${POSTGRES_PASSWORD:-thot}@postgres:5432/${POSTGRES_DB:-thot}
       QDRANT_URL: http://qdrant:6333
@@ -187,9 +223,9 @@ services:
       VECTOR_SIZE: ${VECTOR_SIZE:-1024}
       ALIGN_MODEL: ${ALIGN_MODEL:-sentence-transformers/LaBSE}
       EMBED_BATCH_SIZE: ${EMBED_BATCH_SIZE:-32}
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-thot}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-me}
+      MINIO_ENDPOINT: http://garage:3900
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:?set in .env}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:?set in .env}
       MINIO_BOOKS_BUCKET: ${MINIO_BOOKS_BUCKET:-books}
     volumes:
       - ./books:/books:ro
@@ -210,8 +246,8 @@ services:
         condition: service_completed_successfully
       qdrant:
         condition: service_healthy
-      minio:
-        condition: service_healthy
+      buckets:
+        condition: service_completed_successfully
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-thot}:${POSTGRES_PASSWORD:-thot}@postgres:5432/${POSTGRES_DB:-thot}
       QDRANT_URL: http://qdrant:6333
@@ -221,9 +257,9 @@ services:
       VECTOR_SIZE: ${VECTOR_SIZE:-1024}
       ALIGN_MODEL: ${ALIGN_MODEL:-sentence-transformers/LaBSE}
       EMBED_BATCH_SIZE: ${EMBED_BATCH_SIZE:-32}
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-thot}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-me}
+      MINIO_ENDPOINT: http://garage:3900
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:?set in .env}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:?set in .env}
       MINIO_BOOKS_BUCKET: ${MINIO_BOOKS_BUCKET:-books}
       MINIO_INBOX_BUCKET: ${MINIO_INBOX_BUCKET:-inbox}
       TRASH_DAYS: ${TRASH_DAYS:-30}
@@ -248,8 +284,8 @@ services:
         condition: service_completed_successfully
       qdrant:
         condition: service_healthy
-      minio:
-        condition: service_healthy
+      buckets:
+        condition: service_completed_successfully
     ports:
       - "${API_PORT:-8000}:8000"
     environment:
@@ -257,9 +293,9 @@ services:
       QDRANT_URL: http://qdrant:6333
       QDRANT_API_KEY: ${QDRANT_API_KEY:-}
       QDRANT_COLLECTION: ${QDRANT_COLLECTION:-chunks}
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-thot}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-me}
+      MINIO_ENDPOINT: http://garage:3900
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:?set in .env}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:?set in .env}
       MINIO_BOOKS_BUCKET: ${MINIO_BOOKS_BUCKET:-books}
       OIDC_ISSUER: ${OIDC_ISSUER:-http://localhost:8080/realms/thot}
       # localhost:8080 n'existe pas dans le conteneur : clés lues par le réseau interne
@@ -361,5 +397,6 @@ volumes:
   postgres_data:
   qdrant_data:
   pgadmin_data:
-  minio_data:
+  garage_meta:
+  garage_data:
   hf_cache:
