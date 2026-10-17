@@ -1,4 +1,4 @@
-"""Stockage S3 (MinIO aujourd'hui) des fichiers EPUB des éditions.
+"""Stockage S3 (Garage aujourd'hui) des fichiers EPUB des éditions.
 
 Clé = empreinte du fichier ("editions/<sha256>.epub") : un objet n'est jamais
 modifié, un fichier remplacé donne un nouvel objet et l'ancien est supprimé.
