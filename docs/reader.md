@@ -5,7 +5,7 @@
 > (Vitest) et 14 tests de bout en bout (Playwright, bureau + téléphone,
 > hors ligne compris) passent.
 
-Application web de lecture du corpus Thot : PWA installable sur PC et
+Application web de lecture du corpus Swann : PWA installable sur PC et
 téléphone, lisible hors ligne, au design sobre et moderne. Elle lit le corpus
 **uniquement via la Corpus API** et garde les données de ses lecteurs dans
 **sa propre base** (`reader`) : préférences, progression, favoris, collections.
@@ -14,7 +14,7 @@ téléphone, lisible hors ligne, au design sobre et moderne. Elle lit le corpus
 
 ```
 navigateur (PWA)                         reader/ (Next.js, serveur)                 
- ├─ pages React (RSC + client)  ──────►  ├─ /api/auth/*      Better Auth ──OIDC──► Keycloak (realm thot)
+ ├─ pages React (RSC + client)  ──────►  ├─ /api/auth/*      Better Auth ──OIDC──► Keycloak (realm swann)
  ├─ service worker (Serwist)             ├─ /api/corpus/*    proxy BFF  ──JWT───► corpus-api /v1
  └─ IndexedDB (livres hors ligne,        ├─ /api/me/*        données lecteur ───► Postgres `reader`
     file d'écritures en attente)         └─ worker changes   /v1/changes ───────► anchors:resolve
@@ -27,7 +27,7 @@ navigateur (PWA)                         reader/ (Next.js, serveur)
 - **Jeton utilisé vers l'API** :
   - lecteur connecté → son jeton d'accès Keycloak (audience `corpus-api`,
     rôle `corpus:read` attribué par défaut), rafraîchi par Better Auth ;
-  - visiteur anonyme → jeton du compte de service `thot-reader`
+  - visiteur anonyme → jeton du compte de service `swann-reader`
     (`client_credentials`, `corpus:read`), mis en cache jusqu'à expiration.
 - **Identité** : la clé de toutes les données lecteur est le **`sub` Keycloak**
   (`user_sub`), pas l'identifiant interne de Better Auth : les données restent
@@ -245,10 +245,10 @@ sur `work.updated`, rafraîchit `work_cache`.
 
 ## 8. Authentification
 
-- Better Auth + `genericOAuth` / `keycloak({ issuer, clientId: "thot-reader",
+- Better Auth + `genericOAuth` / `keycloak({ issuer, clientId: "swann-reader",
   clientSecret })`, PKCE ; discovery par le réseau interne en conteneur
-  (`http://keycloak:8080/realms/thot`), émetteur public
-  `http://localhost:8080/realms/thot`.
+  (`http://keycloak:8080/realms/swann`), émetteur public
+  `http://localhost:8080/realms/swann`.
 - Session en base `reader` (schéma `auth`) ; plugin `customSession` pour
   exposer `user_sub` et les rôles.
 - `proxy.ts` (ex-`middleware.ts` dans Next 16) : redirige vers la connexion
@@ -322,7 +322,7 @@ démarrage du conteneur.
 | Plan | Réalisé | Pourquoi |
 | --- | --- | --- |
 | Écritures hors ligne par *Background Sync*, file vidée à `online` | Une seule file côté client (Dexie, `lib/offline/outbox.ts`), vidée au retour du réseau, au retour sur l'onglet et au démarrage ; le service worker ne touche pas à `/api/me` | Background Sync n'existe ni dans Safari ni dans Firefox : une file unique évite deux mécanismes concurrents qui rejoueraient les mêmes écritures |
-| Thème Keycloak avec Keycloakify | Thème CSS `keycloak/themes/thot` héritant de `keycloak.v2` | Même rendu (couleurs, typographie, logo, clair/sombre) sans chaîne Maven ni build de JAR ; Keycloakify reste possible si l'on veut changer la structure des pages |
+| Thème Keycloak avec Keycloakify | Thème CSS `keycloak/themes/swann` héritant de `keycloak.v2` | Même rendu (couleurs, typographie, logo, clair/sombre) sans chaîne Maven ni build de JAR ; Keycloakify reste possible si l'on veut changer la structure des pages |
 | `sendBeacon` à la fermeture | `fetch(..., { keepalive: true })` | `sendBeacon` ne fait que des POST ; l'API de progression est un PUT idempotent |
 | Défilement « virtualisé » | Chapitre rendu en entier, chapitres voisins préchargés | Les chapitres font au plus quelques centaines de paragraphes ; à reprendre si un livre a des chapitres de plusieurs milliers de segments |
 | Audit Lighthouse « PWA » | Catégorie absente de Lighthouse 12 ; installabilité vérifiée par les tests (manifeste, service worker) | — |

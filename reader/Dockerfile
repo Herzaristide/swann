@@ -1,4 +1,4 @@
-# Liseuse Thot (Next.js, sortie `standalone`).
+# Liseuse Swann (Next.js, sortie `standalone`).
 # Contexte de build = dossier reader/ :
 #   docker compose --profile reader up -d reader
 FROM node:22-alpine AS base

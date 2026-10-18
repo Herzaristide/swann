@@ -21,12 +21,12 @@ Les paquets Python forment un **espace de travail uv** (`pyproject.toml` et
 ## Structure du dépôt
 
 ```
-thot/
+swann/
 ├── flake.nix                # environnement de développement
 ├── docker-compose.yml       # toute la pile ; docker-compose.gpu.yml pour le GPU
 ├── pyproject.toml / uv.lock # espace de travail uv
-├── core/thot_core/          # partagé : embed/ (Qwen3, BM25), qdrant.py, s3.py
-├── ingest/thot_ingest/      # CLI thot, worker
+├── core/swann_core/          # partagé : embed/ (Qwen3, BM25), qdrant.py, s3.py
+├── ingest/swann_ingest/      # CLI swann, worker
 │   ├── epub/  text/         # lecture EPUB, structure, segments, langue
 │   ├── chunking/  align/    # découpage v1, programmation dynamique
 │   ├── pipeline/            # extract, index, align, steps (worker)
@@ -34,7 +34,7 @@ thot/
 │   ├── identify.py          # classement des dépôts
 │   ├── quality.py  jobs.py  worker.py  wikidata.py
 │   └── cli.py
-├── corpus-api/thot_api/     # FastAPI : main, auth, engine, sql, text, schemas, routers/
+├── corpus-api/swann_api/     # FastAPI : main, auth, engine, sql, text, schemas, routers/
 ├── reader/                  # liseuse (Next.js 16, PWA)
 ├── console/                 # console d'administration (Next.js 16)
 ├── keycloak/                # realm importé, thème de connexion
@@ -46,7 +46,7 @@ thot/
 ## Ingestion
 
 ```bash
-uv run thot --help
+uv run swann --help
 uv run pytest ingest/tests          # EPUB synthétiques, sans base
 ```
 
@@ -55,14 +55,14 @@ uv run pytest ingest/tests          # EPUB synthétiques, sans base
 ```bash
 # sans Keycloak : tous les droits, aucun jeton vérifié
 AUTH_DISABLED=true HF_HUB_OFFLINE=1 \
-  uv run uvicorn thot_api.main:create_app --factory --reload
+  uv run uvicorn swann_api.main:create_app --factory --reload
 
 uv run pytest corpus-api/tests
 ```
 
-Les tests d'intégration copient la base `thot` dans `thot_api_test`
+Les tests d'intégration copient la base `swann` dans `swann_api_test`
 (`CREATE DATABASE … TEMPLATE`) : aucune session ne doit être ouverte sur
-`thot` pendant les tests, sinon ils sont ignorés. Les tests d'écriture
+`swann` pendant les tests, sinon ils sont ignorés. Les tests d'écriture
 (admin) ne touchent jamais la vraie base.
 
 ## Liseuse et console
@@ -80,7 +80,7 @@ pnpm build && pnpm test:e2e       # Playwright, base jetable reader_e2e
 pnpm worker --once                # (reader) synchronisation /v1/changes
 ```
 
-Le client Keycloak `thot-reader` n'accepte que `READER_URL` : les tests de
+Le client Keycloak `swann-reader` n'accepte que `READER_URL` : les tests de
 bout en bout ont besoin du port 3000 libre (`docker compose stop reader`).
 
 ## Boucle de contrat

@@ -12,7 +12,7 @@ const e = env();
 
 /**
  * Better Auth : sessions de la console (cookie httpOnly, base `console`,
- * schéma `auth`), connexion par Keycloak (OIDC, PKCE, client `thot-console`).
+ * schéma `auth`), connexion par Keycloak (OIDC, PKCE, client `swann-console`).
  * Les jetons Keycloak restent côté serveur ; la Corpus API vérifie elle-même
  * les rôles corpus:admin / corpus:review à chaque appel.
  */

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from thot_api.routers.admin_alignment import wilson
+from swann_api.routers.admin_alignment import wilson
 
 
 @pytest.fixture(scope="module")

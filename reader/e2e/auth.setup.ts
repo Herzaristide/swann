@@ -7,6 +7,6 @@ setup("connexion", async ({ page }) => {
   await page.locator("#password").fill(process.env.KEYCLOAK_DEV_USER_PASSWORD ?? "lecteur");
   await page.locator("#kc-login").click();
   await page.waitForURL("http://localhost:3000/**");
-  await expect(page.getByText("Lecteur Thot").first()).toBeVisible();
+  await expect(page.getByText("Lecteur Swann").first()).toBeVisible();
   await page.context().storageState({ path: "e2e/.auth/lecteur.json" });
 });

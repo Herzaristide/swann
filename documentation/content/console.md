@@ -25,7 +25,7 @@ flowchart LR
     a["/api/auth/*<br/>Better Auth"]
     p["/api/corpus/*<br/>proxy BFF"]
   end
-  a -- "OIDC (thot-console)" --> kc["Keycloak"]
+  a -- "OIDC (swann-console)" --> kc["Keycloak"]
   p -- "JWT" --> api["corpus-api<br/>/v1 et /v1/admin"]
   api -- "SSE /v1/admin/stream" --> p
   api --> pg[("Postgres<br/>jobs, qualité, corpus_events")]

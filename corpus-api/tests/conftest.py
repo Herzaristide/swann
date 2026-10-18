@@ -1,6 +1,6 @@
 """Tests d'intégration : une copie jetable de la base du corpus.
 
-La base `THOT_TEST_TEMPLATE` (défaut : thot) est copiée dans `thot_api_test`
+La base `SWANN_TEST_TEMPLATE` (défaut : swann) est copiée dans `swann_api_test`
 au début de la session puis supprimée : les tests peuvent écrire sans toucher
 aux vraies données. Qdrant et S3 sont lus tels quels (l'API n'y écrit pas).
 Tests ignorés si Postgres est injoignable ou si la base modèle est en cours
@@ -16,11 +16,11 @@ import psycopg
 import pytest
 from fastapi.testclient import TestClient
 
-from thot_api.auth import ADMIN, READ, REVIEW, Principal, current_principal
-from thot_api.config import Settings
-from thot_api.main import create_app
+from swann_api.auth import ADMIN, READ, REVIEW, Principal, current_principal
+from swann_api.config import Settings
+from swann_api.main import create_app
 
-TEST_DB = "thot_api_test"
+TEST_DB = "swann_api_test"
 
 
 def _with_db(url: str, name: str) -> str:
@@ -31,7 +31,7 @@ def _with_db(url: str, name: str) -> str:
 @pytest.fixture(scope="session")
 def test_database_url():
     base = Settings()
-    template = os.environ.get("THOT_TEST_TEMPLATE", "thot")
+    template = os.environ.get("SWANN_TEST_TEMPLATE", "swann")
     admin_url = _with_db(base.database_url, "postgres")
     try:
         admin = psycopg.connect(admin_url, autocommit=True, connect_timeout=3)

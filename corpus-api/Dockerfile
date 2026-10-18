@@ -18,12 +18,12 @@ COPY core/pyproject.toml core/
 COPY ingest/pyproject.toml ingest/
 COPY corpus-api/pyproject.toml corpus-api/
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --package thot-api --no-install-workspace
+    uv sync --frozen --no-dev --package swann-api --no-install-workspace
 
-COPY core/thot_core core/thot_core
-COPY corpus-api/thot_api corpus-api/thot_api
+COPY core/swann_core core/swann_core
+COPY corpus-api/swann_api corpus-api/swann_api
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --package thot-api
+    uv sync --frozen --no-dev --package swann-api
 
 EXPOSE 8000
-CMD ["uvicorn", "thot_api.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
+CMD ["uvicorn", "swann_api.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]

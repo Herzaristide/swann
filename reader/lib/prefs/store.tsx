@@ -28,7 +28,7 @@ type Ctx = {
 };
 
 const PrefsContext = createContext<Ctx | null>(null);
-const STORAGE_KEY = "thot:prefs";
+const STORAGE_KEY = "swann:prefs";
 const EPOCH = new Date(0).toISOString();
 
 function readLocal(): Stored | null {

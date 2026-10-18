@@ -1,7 +1,7 @@
 import type { DocsConfig } from "barjavel"
 
 const config: DocsConfig = {
-  title: "Thot",
+  title: "Swann",
   description:
     "Bibliothèque multilingue : ingestion d'EPUB, recherche vectorielle, alignement des traductions, Corpus API, liseuse et console.",
   lang: "fr",
@@ -9,7 +9,7 @@ const config: DocsConfig = {
   accent: "#a2462a",
   accentLight: "#a2462a",
   accentDark: "#e3a56b",
-  footer: "Thot — documentation d'architecture",
+  footer: "Swann — documentation d'architecture",
 }
 
 export default config

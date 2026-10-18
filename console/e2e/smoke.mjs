@@ -19,7 +19,7 @@ page.on("response", (r) => {
 });
 
 await page.goto(`${BASE}/`);
-await page.waitForURL(/realms\/thot/);
+await page.waitForURL(/realms\/swann/);
 await page.fill("#username", "lecteur");
 await page.fill("#password", "lecteur");
 await page.click("#kc-login");

@@ -2,7 +2,7 @@
 -- =============================================================================
 -- Console d'administration (docs/console.md)
 -- -----------------------------------------------------------------------------
--- 1. File de tâches `jobs` prise par le worker (`thot worker`) avec
+-- 1. File de tâches `jobs` prise par le worker (`swann worker`) avec
 --    SELECT … FOR UPDATE SKIP LOCKED. Chaque insertion ou changement de statut
 --    / d'avancement est notifié sur le canal `jobs` (le worker se réveille,
 --    l'API relaie en SSE).
@@ -25,9 +25,9 @@ CREATE TYPE job_kind AS ENUM (
     'trash_edition',   -- mise à la corbeille : points Qdrant retirés
     'restore_edition', -- sortie de corbeille : réindexation, réalignement
     'purge',           -- suppression définitive (Postgres, Qdrant, MinIO)
-    'import_books',    -- import de books/ (équivalent de thot extract)
+    'import_books',    -- import de books/ (équivalent de swann extract)
     'quality',         -- recalcul de la qualité (une édition ou toutes)
-    'cli'              -- exécution d'une commande thot, pour la supervision
+    'cli'              -- exécution d'une commande swann, pour la supervision
 );
 
 CREATE TYPE job_status AS ENUM (
@@ -38,7 +38,7 @@ CREATE TABLE jobs (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     kind            job_kind NOT NULL,
     status          job_status NOT NULL DEFAULT 'queued',
-    -- Libellé lisible ("Dépôt de fr.epub", "thot extract")
+    -- Libellé lisible ("Dépôt de fr.epub", "swann extract")
     title           TEXT NOT NULL,
     params          JSONB NOT NULL DEFAULT '{}',
     -- {step, done, total, message, tokens_per_s}
@@ -93,8 +93,8 @@ CREATE INDEX ingestions_started_idx ON ingestions (started_at DESC);
 
 -- --------------------------------------------------------------- 3. qualité
 -- parse_* : connu seulement à la lecture de l'EPUB (renseigné par extract).
--- metrics : calculé depuis la base (étape quality, `thot quality`).
--- signals : codes des problèmes détectés (voir thot_ingest.quality).
+-- metrics : calculé depuis la base (étape quality, `swann quality`).
+-- signals : codes des problèmes détectés (voir swann_ingest.quality).
 CREATE TABLE edition_quality (
     edition_id         UUID PRIMARY KEY REFERENCES editions (id) ON DELETE CASCADE,
     structure_method   TEXT,

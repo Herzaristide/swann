@@ -22,7 +22,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-dvh">
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r px-3 py-5 lg:flex">
-        <Link href="/" className="mb-8 px-3" aria-label="Thot — accueil">
+        <Link href="/" className="mb-8 px-3" aria-label="Swann — accueil">
           <Logo />
         </Link>
         <nav aria-label="Navigation principale" className="flex flex-col gap-0.5">
@@ -58,7 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/85 px-4 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 lg:px-8">
-          <Link href="/" className="lg:hidden" aria-label="Thot — accueil">
+          <Link href="/" className="lg:hidden" aria-label="Swann — accueil">
             <Logo compact />
           </Link>
           <div className="flex flex-1 justify-end lg:justify-start">

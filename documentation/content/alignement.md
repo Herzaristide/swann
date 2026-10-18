@@ -1,7 +1,7 @@
 ---
 title: Alignement
 group: traitements
-summary: Comment Thot relie les paragraphes des traductions d'une même œuvre — édition de référence, unités pivots, programmation dynamique LaBSE, qualité et relecture humaine.
+summary: Comment Swann relie les paragraphes des traductions d'une même œuvre — édition de référence, unités pivots, programmation dynamique LaBSE, qualité et relecture humaine.
 links: [ingestion, donnees, recherche, liseuse, console]
 ---
 
@@ -49,7 +49,7 @@ Les liens sont **n-n** : un paragraphe original peut correspondre à deux
 paragraphes traduits (1-2), ou l'inverse (2-1). fr → en passe par les unités,
 sans alignement direct entre les deux traductions.
 
-## Algorithme (`thot-labse-v1`)
+## Algorithme (`swann-labse-v1`)
 
 ```mermaid
 flowchart TB

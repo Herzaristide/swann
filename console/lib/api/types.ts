@@ -34,7 +34,7 @@ export type WorkbenchTarget = S["WorkbenchTarget"];
 export type Precision = S["Precision"];
 export type AlignmentLink = S["AlignmentLink"];
 
-/** Rapport de classement d'un dépôt (thot_ingest.identify.Report, en JSON). */
+/** Rapport de classement d'un dépôt (swann_ingest.identify.Report, en JSON). */
 export type Identification = {
   metadata: {
     titles: string[];

@@ -1,4 +1,4 @@
-# Image du pipeline d'ingestion (thot check / extract / index / align / search).
+# Image du pipeline d'ingestion (swann check / extract / index / align / search).
 # Contexte de build = racine du dépôt (espace de travail uv : core + ingest).
 # Le GPU est accessible si le conteneur est lancé avec docker-compose.gpu.yml
 # (NVIDIA Container Toolkit / CDI côté hôte).
@@ -21,12 +21,12 @@ COPY core/pyproject.toml core/
 COPY ingest/pyproject.toml ingest/
 COPY corpus-api/pyproject.toml corpus-api/
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --package thot-ingest --no-install-workspace
+    uv sync --frozen --no-dev --package swann-ingest --no-install-workspace
 
-COPY core/thot_core core/thot_core
-COPY ingest/thot_ingest ingest/thot_ingest
+COPY core/swann_core core/swann_core
+COPY ingest/swann_ingest ingest/swann_ingest
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --package thot-ingest
+    uv sync --frozen --no-dev --package swann-ingest
 
-ENTRYPOINT ["thot"]
+ENTRYPOINT ["swann"]
 CMD ["--help"]

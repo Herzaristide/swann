@@ -6,7 +6,7 @@ import { defineConfig, devices } from "@playwright/test";
  * Prérequis : Postgres, Keycloak et la Corpus API démarrés ; `pnpm build`.
  * Le client Keycloak n'accepte que http://localhost:3000 : port 3000 libre.
  */
-const E2E_DB = "postgresql://thot:thot@localhost:5432/reader_e2e";
+const E2E_DB = "postgresql://swann:swann@localhost:5432/reader_e2e";
 
 export default defineConfig({
   testDir: "e2e",

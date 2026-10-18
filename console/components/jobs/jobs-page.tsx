@@ -63,7 +63,7 @@ export function JobsPage() {
     <>
       <PageHeader
         title="Tâches"
-        description="Dépôts, retraitements, alignements, commandes thot : en direct."
+        description="Dépôts, retraitements, alignements, commandes swann : en direct."
       />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Tabs value={tab} onValueChange={(v) => set("status", v)}>

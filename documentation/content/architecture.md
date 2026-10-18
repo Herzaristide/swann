@@ -1,13 +1,13 @@
 ---
 title: Architecture
 group: architecture
-summary: Les composants de Thot, leurs dépendances, qui écrit où, et le modèle BFF des applications web.
+summary: Les composants de Swann, leurs dépendances, qui écrit où, et le modèle BFF des applications web.
 links: [index, donnees, corpus-api, authentification, liseuse, console, worker, deploiement]
 ---
 
 # Architecture
 
-Thot est découpé en trois couches : le **corpus** (trois bases de données),
+Swann est découpé en trois couches : le **corpus** (trois bases de données),
 la **Corpus API** qui l'expose, et les **applications** qui ne passent que
 par l'API. Les traitements lourds (EPUB, embeddings, alignement) sont faits
 par l'**ingestion**, en ligne de commande ou par le worker.
@@ -28,19 +28,19 @@ flowchart TB
   end
 
   subgraph identity["Identité"]
-    kc["Keycloak :8080<br/>realm thot"]
+    kc["Keycloak :8080<br/>realm swann"]
   end
 
   subgraph core["Corpus"]
     api["corpus-api :8000<br/>FastAPI /v1 et /v1/admin"]
-    pg[("Postgres :5432<br/>base thot")]
+    pg[("Postgres :5432<br/>base swann")]
     qd[("Qdrant :6333<br/>alias chunks")]
     s3[("MinIO :9000<br/>buckets books, inbox")]
   end
 
   subgraph processing["Traitements"]
-    cli["CLI thot<br/>(à la demande)"]
-    iw["ingest-worker<br/>thot worker, GPU"]
+    cli["CLI swann<br/>(à la demande)"]
+    iw["ingest-worker<br/>swann worker, GPU"]
   end
 
   subgraph appdb["Bases des applications"]
@@ -70,15 +70,15 @@ flowchart TB
 
 ## Qui écrit où
 
-| Composant | Postgres `thot` | Qdrant | MinIO | Base propre |
+| Composant | Postgres `swann` | Qdrant | MinIO | Base propre |
 | --- | --- | --- | --- | --- |
-| CLI `thot` / worker | œuvres, éditions, texte, chunks, alignements, qualité, `corpus_events` | points des chunks, payload | EPUB (`books/`) | — |
+| CLI `swann` / worker | œuvres, éditions, texte, chunks, alignements, qualité, `corpus_events` | points des chunks, payload | EPUB (`books/`) | — |
 | Corpus API | verdicts d'alignement, fiches et structure (admin), file `jobs` | lecture (+ activation d'alias) | dépôts dans `inbox` ; lecture des EPUB | — |
 | Liseuse | — | — | — | `reader` : préférences, progression, favoris, collections |
 | Console | — | — | — | `console` : sessions |
 | Keycloak | — | — | — | `keycloak` : comptes, realm |
 
-Les quatre bases Postgres (`thot`, `reader`, `console`, `keycloak`) vivent sur
+Les quatre bases Postgres (`swann`, `reader`, `console`, `keycloak`) vivent sur
 le **même serveur** Postgres mais restent indépendantes : aucune jointure
 entre elles, chaque application n'accède qu'à la sienne.
 
@@ -144,9 +144,9 @@ navigateur, proxy en **liste blanche** des chemins autorisés.
 
 ```mermaid
 flowchart BT
-  core["core/thot_core<br/>embed (Qwen3, BM25), qdrant.py, s3.py"]
-  ingest["ingest/thot_ingest<br/>CLI thot, worker"]
-  api["corpus-api/thot_api<br/>FastAPI"]
+  core["core/swann_core<br/>embed (Qwen3, BM25), qdrant.py, s3.py"]
+  ingest["ingest/swann_ingest<br/>CLI swann, worker"]
+  api["corpus-api/swann_api<br/>FastAPI"]
   reader["reader/<br/>Next.js"]
   console["console/<br/>Next.js"]
   ingest --> core
@@ -156,7 +156,7 @@ flowchart BT
 ```
 
 Les paquets Python forment un **espace de travail uv** (un seul `.venv` à la
-racine) ; `thot_core` est partagé pour que l'ingestion et l'API encodent les
+racine) ; `swann_core` est partagé pour que l'ingestion et l'API encodent les
 textes exactement de la même façon. Les applications TypeScript génèrent leur
 client typé (`openapi-typescript` + `openapi-fetch`) depuis le contrat
 OpenAPI de l'API.

@@ -8,7 +8,7 @@ links: [console, ingestion, donnees, deploiement, corpus-api]
 # Worker et file de tâches
 
 Les traitements lourds demandés depuis la console (dépôts, retraitements,
-alignements, corbeille) sont exécutés par **`thot worker`**, un processus
+alignements, corbeille) sont exécutés par **`swann worker`**, un processus
 permanent qui garde les modèles chargés en mémoire. La file est une simple
 **table `jobs` dans Postgres** : pas de Redis ni de Celery.
 
@@ -17,8 +17,8 @@ permanent qui garde les modèles chargés en mémoire. La file est une simple
 ```mermaid
 flowchart LR
   api["Corpus API<br/>/v1/admin/*"] -- "INSERT jobs" --> pg[("Postgres<br/>table jobs")]
-  cli["CLI thot"] -- "INSERT jobs (kind cli)<br/>suivi seulement" --> pg
-  pg -- "trigger → pg_notify('jobs')" --> w["thot worker<br/>Qwen3 + LaBSE en mémoire"]
+  cli["CLI swann"] -- "INSERT jobs (kind cli)<br/>suivi seulement" --> pg
+  pg -- "trigger → pg_notify('jobs')" --> w["swann worker<br/>Qwen3 + LaBSE en mémoire"]
   w -- "SELECT … FOR UPDATE SKIP LOCKED" --> pg
   w -- "progress, heartbeat_at" --> pg
   w -- "seen_at (toutes les 10 s)" --> workers[("table workers")]
@@ -74,9 +74,9 @@ stateDiagram-v2
 | `trash_edition` | mise à la corbeille : points Qdrant retirés |
 | `restore_edition` | sortie de corbeille : réindexation, réalignement |
 | `purge` | suppression définitive : Postgres, Qdrant, MinIO |
-| `import_books` | import de `books/` (équivalent de `thot extract`) |
+| `import_books` | import de `books/` (équivalent de `swann extract`) |
 | `quality` | recalcul de la qualité (une édition ou toutes) |
-| `cli` | exécution d'une commande `thot`, suivie mais non exécutée par le worker |
+| `cli` | exécution d'une commande `swann`, suivie mais non exécutée par le worker |
 
 ## Corbeille
 

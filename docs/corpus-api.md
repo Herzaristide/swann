@@ -15,14 +15,14 @@ apps (Next.js, scripts…) ──HTTPS + JWT Keycloak──► corpus-api (FastA
                                                      ├─► Postgres corpus  (métadonnées, texte, alignements)
                                                      ├─► Qdrant           (alias `chunks`)
                                                      └─► MinIO            (EPUB)
-ingest (CLI thot) ──────────── écrit directement ────► Postgres / Qdrant / MinIO
+ingest (CLI swann) ──────────── écrit directement ────► Postgres / Qdrant / MinIO
 ```
 
 ## 1. Principes
 
 - **Lecture d'abord.** L'API lit le corpus. Elle n'écrit que pour des actions
   humaines ciblées (verdicts et corrections d'alignement). L'ingestion et
-  l'administration des index restent dans la CLI `thot`.
+  l'administration des index restent dans la CLI `swann`.
 - **Aucune donnée utilisateur.** L'API ne connaît d'un utilisateur que le
   `sub` de son jeton. Favoris, progression et collections vivent dans la base
   de chaque application.
@@ -39,7 +39,7 @@ ingest (CLI thot) ──────────── écrit directement ──
 
 ## 2. Authentification et droits
 
-Jetons **JWT émis par Keycloak** (realm `thot`), vérifiés localement avec les
+Jetons **JWT émis par Keycloak** (realm `swann`), vérifiés localement avec les
 clés publiques (JWKS) du realm. Audience attendue : `corpus-api`.
 
 | Appelant | Flux OAuth | Exemple |
@@ -90,7 +90,7 @@ la langue effectivement servie.
 **Erreurs** au format RFC 9457 (`application/problem+json`) :
 
 ```json
-{ "type": "https://thot/errors/revision-mismatch", "title": "Révision obsolète",
+{ "type": "https://swann/errors/revision-mismatch", "title": "Révision obsolète",
   "status": 409, "detail": "L'édition est en révision 4, la requête vise la 3.",
   "current_revision": 4 }
 ```
@@ -240,7 +240,7 @@ aux applications : on pourra changer de stockage sans toucher aux clients.
 - `404` si l'EPUB n'est pas stocké (`epub_available = false`), `403` si
   `access` ≠ `open`.
 
-Stockage : l'ingestion (`thot extract`) envoie chaque EPUB dans le bucket
+Stockage : l'ingestion (`swann extract`) envoie chaque EPUB dans le bucket
 `books` sous la clé `editions/<sha256>.epub` (un fichier remplacé = un nouvel
 objet, l'ancien est supprimé) et renseigne `editions.epub_object_key`.
 
@@ -482,11 +482,11 @@ trigrammes) et le tri par titre affiché (calculé à la volée).
 ## 8. Implémentation
 
 ```
-thot/
-├── core/thot_core/   # partagé : embed (Qwen3, BM25), qdrant.py, s3.py
-├── ingest/           # dépend de thot_core
-└── corpus-api/       # FastAPI, dépend de thot_core
-    └── thot_api/
+swann/
+├── core/swann_core/   # partagé : embed (Qwen3, BM25), qdrant.py, s3.py
+├── ingest/           # dépend de swann_core
+└── corpus-api/       # FastAPI, dépend de swann_core
+    └── swann_api/
         ├── main.py       # application, cycle de vie (pool psycopg, Qdrant, S3, encodeur)
         ├── auth.py       # vérification JWT Keycloak (JWKS), rôles, droits `access`
         ├── engine.py     # index actif (alias Qdrant) et encodeur de requêtes
@@ -500,8 +500,8 @@ Le SQL reste écrit à la main (psycopg, pool asynchrone), dans le style de
 l'ingestion. Les modèles Pydantic sont la source du contrat OpenAPI.
 
 Le payload Qdrant porte `access` : la recherche filtre les éditions
-`restricted` côté Qdrant. Quand une fiche change de droits, `thot extract`
-met à jour le payload sans réindexer (`thot index sync-payload` pour
+`restricted` côté Qdrant. Quand une fiche change de droits, `swann extract`
+met à jour le payload sans réindexer (`swann index sync-payload` pour
 rattraper un index existant).
 
 ## 9. Changements de schéma préalables
@@ -517,11 +517,11 @@ Faits (migration `db/migrations/20261002120000_corpus_api.sql` et ingestion) :
 | 5 | Fonction `section_ranges(edition_id)` (`seq_start` / `seq_end` d'une section, descendants compris) | `toc` |
 | 6 | Extensions `pg_trgm` et `unaccent`, index trigrammes sur titres et noms | `suggest`, `find`, contrôle des citations |
 | 7 | Outil de migration (dbmate) à la place de `docker-entrypoint-initdb.d` | faire évoluer une base qui contient des données qu'on ne peut plus effacer |
-| 8 | `thot extract` envoie les EPUB dans MinIO ; bucket `avatars` supprimé | EPUB bruts servis par l'API ; les avatars relèvent des apps |
+| 8 | `swann extract` envoie les EPUB dans MinIO ; bucket `avatars` supprimé | EPUB bruts servis par l'API ; les avatars relèvent des apps |
 
 ## 10. Hors périmètre de la v1
 
-- Création des index vectoriels : CLI `thot index create`.
+- Création des index vectoriels : CLI `swann index create`.
 
 L'administration du corpus (supervision, dépôts, fiches, structure,
 corbeille, atelier d'alignement) est sous `/v1/admin` (rôle `corpus:admin`,

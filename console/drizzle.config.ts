@@ -6,6 +6,6 @@ export default defineConfig({
   out: "./drizzle",
   casing: "snake_case",
   dbCredentials: {
-    url: process.env.CONSOLE_DATABASE_URL ?? "postgresql://thot:thot@localhost:5432/console",
+    url: process.env.CONSOLE_DATABASE_URL ?? "postgresql://swann:swann@localhost:5432/console",
   },
 });

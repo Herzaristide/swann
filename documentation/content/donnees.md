@@ -7,7 +7,7 @@ links: [architecture, ingestion, alignement, recherche, revisions, worker]
 
 # Modèle de données
 
-Le schéma de la base `thot` évolue par **migrations dbmate**
+Le schéma de la base `swann` évolue par **migrations dbmate**
 (`db/migrations/`), appliquées par le service `migrate` à chaque démarrage.
 Une base n'est jamais recréée : toute évolution passe par une nouvelle
 migration (`-- migrate:up` / `-- migrate:down`).
@@ -144,7 +144,7 @@ erDiagram
     uuid segment_id FK
     uuid unit_id FK
     real score
-    text method "thot-labse-v1 | manual"
+    text method "swann-labse-v1 | manual"
     text created_by_sub
   }
   edition_alignments {

@@ -4,8 +4,8 @@ import { inter, literata } from "@/lib/fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "Console", template: "%s · Console Thot" },
-  description: "Administration du corpus Thot : supervision, dépôts, fiches, alignements.",
+  title: { default: "Console", template: "%s · Console Swann" },
+  description: "Administration du corpus Swann : supervision, dépôts, fiches, alignements.",
   robots: { index: false, follow: false },
 };
 

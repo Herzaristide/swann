@@ -64,7 +64,7 @@ export function IndexesPage() {
         <CardHeader>
           <CardTitle>Index vectoriels</CardTitle>
           <span className="text-xs text-muted-foreground">
-            création : thot index create … puis remplissage par le worker
+            création : swann index create … puis remplissage par le worker
           </span>
         </CardHeader>
         <CardContent>

@@ -15,4 +15,4 @@ select = ["E", "F", "I", "B", "UP", "SIM"]
 "*/tests/*" = ["E501"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["thot_core", "thot_ingest", "thot_api"]
+known-first-party = ["swann_core", "swann_ingest", "swann_api"]

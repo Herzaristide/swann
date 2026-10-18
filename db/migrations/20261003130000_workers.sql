@@ -1,6 +1,6 @@
 -- migrate:up
 -- =============================================================================
--- Workers d'ingestion (`thot worker`) : présence et matériel, pour la
+-- Workers d'ingestion (`swann worker`) : présence et matériel, pour la
 -- supervision. Chaque worker met à jour `seen_at` toutes les 10 s, même sans
 -- tâche ; au-delà de 60 s sans nouvelle, la console le montre arrêté.
 -- =============================================================================

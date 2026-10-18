@@ -8,14 +8,14 @@ import jwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-from thot_api.auth import ADMIN, READ, REVIEW, Principal, TokenVerifier, principal_from_claims
-from thot_api.config import Settings
-from thot_api.deps import decode_cursor, encode_cursor
-from thot_api.errors import Problem
-from thot_api.routers.alignment import group_pairs, insert_orphans
-from thot_api.routers.editions import parse_range
-from thot_api.routers.search import expand_languages, term_spans
-from thot_api.text import excerpt, find_all, locate_quote, normalize, quick_normalize, snippet
+from swann_api.auth import ADMIN, READ, REVIEW, Principal, TokenVerifier, principal_from_claims
+from swann_api.config import Settings
+from swann_api.deps import decode_cursor, encode_cursor
+from swann_api.errors import Problem
+from swann_api.routers.alignment import group_pairs, insert_orphans
+from swann_api.routers.editions import parse_range
+from swann_api.routers.search import expand_languages, term_spans
+from swann_api.text import excerpt, find_all, locate_quote, normalize, quick_normalize, snippet
 
 
 # ---------------------------------------------------------------------- texte
@@ -165,7 +165,7 @@ class FakeJWKS:
 @pytest.fixture
 def verifier():
     private = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    v = TokenVerifier(Settings(oidc_issuer="https://kc/realms/thot", oidc_audience="corpus-api"))
+    v = TokenVerifier(Settings(oidc_issuer="https://kc/realms/swann", oidc_audience="corpus-api"))
     v.__dict__["jwks"] = FakeJWKS(private.public_key())  # remplace la découverte OIDC
     return v, private
 
@@ -174,7 +174,7 @@ def make_token(private, **overrides):
     now = int(time.time())
     claims = {
         "sub": "u1",
-        "iss": "https://kc/realms/thot",
+        "iss": "https://kc/realms/swann",
         "aud": "corpus-api",
         "iat": now,
         "exp": now + 60,
@@ -192,7 +192,7 @@ def test_token_verifier_accepts_valid_token(verifier):
 
 @pytest.mark.parametrize(
     "overrides",
-    [{"aud": "autre-api"}, {"iss": "https://pirate/realms/thot"}, {"exp": int(time.time()) - 10}],
+    [{"aud": "autre-api"}, {"iss": "https://pirate/realms/swann"}, {"exp": int(time.time()) - 10}],
 )
 def test_token_verifier_rejects(verifier, overrides):
     v, private = verifier

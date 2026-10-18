@@ -1,0 +1,90 @@
+/* Couleurs et typographie de la liseuse (reader/app/globals.css) */
+:root {
+  --keycloak-card-top-color: #8f3a22;
+  --swann-bg: #fbf8f2;
+  --swann-fg: #2b2420;
+  --swann-muted: #6b625a;
+  --swann-primary: #8f3a22;
+  --swann-primary-hover: #7a3019;
+  --pf-v5-global--primary-color--100: var(--swann-primary);
+  --pf-v5-global--primary-color--200: var(--swann-primary-hover);
+  --pf-v5-global--link--Color: var(--swann-primary);
+  --pf-v5-global--link--Color--hover: var(--swann-primary-hover);
+  --swann-serif: Literata, Georgia, "Times New Roman", "Noto Serif", "DejaVu Serif", serif;
+  --swann-card: #ffffff;
+  --pf-v5-global--BorderRadius--sm: 8px;
+}
+
+.pf-v5-theme-dark {
+  --swann-bg: #1a1816;
+  --swann-fg: #ece6dc;
+  --swann-muted: #b3aa9f;
+  --swann-primary: #e0a06f;
+  --swann-primary-hover: #eab48a;
+  --swann-card: #221f1c;
+}
+
+/* En-tête : logo + nom du realm (texte), lisibles dans les deux thèmes */
+#kc-header-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  /* le thème parent impose du blanc (!important), pensé pour un fond sombre */
+  color: var(--swann-fg) !important;
+  font-family: var(--swann-serif);
+  font-size: 1.9rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+#kc-header-wrapper::before {
+  content: "";
+  width: 2.25rem;
+  height: 2.25rem;
+  background: url("../img/swann-icon.svg") no-repeat center / contain;
+}
+
+.pf-v5-c-login__main {
+  background-color: var(--swann-card);
+}
+
+.login-pf body,
+.pf-v5-c-login {
+  background: var(--swann-bg);
+  color: var(--swann-fg);
+}
+
+.pf-v5-c-login__main {
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 12px 32px rgb(0 0 0 / 0.08);
+  overflow: hidden;
+}
+
+.pf-v5-c-login__main-header {
+  border-top-width: 3px;
+}
+
+.pf-v5-c-title,
+#kc-page-title {
+  font-family: var(--swann-serif);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.pf-v5-c-button.pf-m-primary {
+  --pf-v5-c-button--m-primary--BackgroundColor: var(--swann-primary);
+  --pf-v5-c-button--m-primary--hover--BackgroundColor: var(--swann-primary-hover);
+  --pf-v5-c-button--m-primary--focus--BackgroundColor: var(--swann-primary-hover);
+  --pf-v5-c-button--m-primary--active--BackgroundColor: var(--swann-primary-hover);
+  border-radius: 8px;
+}
+
+.pf-v5-theme-dark .pf-v5-c-button.pf-m-primary {
+  --pf-v5-c-button--m-primary--Color: #1a1816;
+}
+
+.pf-v5-c-form-control {
+  border-radius: 8px;
+}

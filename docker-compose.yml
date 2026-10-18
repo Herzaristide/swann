@@ -1,18 +1,18 @@
 services:
   postgres:
     image: postgres:17-alpine
-    container_name: thot_postgres
+    container_name: swann_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-thot}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-thot}
-      POSTGRES_DB: ${POSTGRES_DB:-thot}
+      POSTGRES_USER: ${POSTGRES_USER:-swann}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-swann}
+      POSTGRES_DB: ${POSTGRES_DB:-swann}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-thot} -d ${POSTGRES_DB:-thot}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-swann} -d ${POSTGRES_DB:-swann}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -21,12 +21,12 @@ services:
   # Les autres services qui écrivent en base attendent sa fin.
   migrate:
     image: ghcr.io/amacneil/dbmate:2.35.1
-    container_name: thot_migrate
+    container_name: swann_migrate
     depends_on:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-thot}:${POSTGRES_PASSWORD:-thot}@postgres:5432/${POSTGRES_DB:-thot}?sslmode=disable
+      DATABASE_URL: postgresql://${POSTGRES_USER:-swann}:${POSTGRES_PASSWORD:-swann}@postgres:5432/${POSTGRES_DB:-swann}?sslmode=disable
       DBMATE_MIGRATIONS_DIR: /db/migrations
       DBMATE_NO_DUMP_SCHEMA: "true"
     command: ["--wait", "up"]
@@ -36,19 +36,19 @@ services:
 
   # Crée les bases des autres services sur le même serveur Postgres, puis
   # s'arrête (idempotent ; initdb.d ne tourne que sur un volume vide) :
-  #   keycloak : comptes, sessions, realm `thot`
+  #   keycloak : comptes, sessions, realm `swann`
   #   reader   : données des lecteurs de la liseuse (préférences, progression…)
   databases:
     image: postgres:17-alpine
-    container_name: thot_databases
+    container_name: swann_databases
     depends_on:
       postgres:
         condition: service_healthy
     environment:
       PGHOST: postgres
-      PGUSER: ${POSTGRES_USER:-thot}
-      PGPASSWORD: ${POSTGRES_PASSWORD:-thot}
-      PGDATABASE: ${POSTGRES_DB:-thot}
+      PGUSER: ${POSTGRES_USER:-swann}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-swann}
+      PGDATABASE: ${POSTGRES_DB:-swann}
     command:
       - sh
       - -c
@@ -59,14 +59,14 @@ services:
         done
     restart: "no"
 
-  # Identité (OIDC). Realm `thot` importé au premier démarrage depuis
+  # Identité (OIDC). Realm `swann` importé au premier démarrage depuis
   # keycloak/import/ (ignoré ensuite s'il existe déjà).
   #   console : http://localhost:8080/admin  (KEYCLOAK_ADMIN / KEYCLOAK_ADMIN_PASSWORD)
   # Les jetons portent toujours l'émetteur public (KEYCLOAK_URL) ; les autres
   # conteneurs joignent Keycloak par http://keycloak:8080 (backchannel dynamique).
   keycloak:
     image: quay.io/keycloak/keycloak:26.8
-    container_name: thot_keycloak
+    container_name: swann_keycloak
     restart: unless-stopped
     command: ["start-dev", "--import-realm"]
     depends_on:
@@ -75,25 +75,25 @@ services:
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
-      KC_DB_USERNAME: ${POSTGRES_USER:-thot}
-      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-thot}
+      KC_DB_USERNAME: ${POSTGRES_USER:-swann}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-swann}
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-change-me}
       KC_HOSTNAME: ${KEYCLOAK_URL:-http://localhost:8080}
       KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
       KC_HEALTH_ENABLED: "true"
-      # Valeurs injectées dans keycloak/import/thot-realm.json
-      THOT_READER_URL: ${READER_URL:-http://localhost:3000}
-      THOT_READER_CLIENT_SECRET: ${READER_CLIENT_SECRET:-dev-reader-secret}
-      THOT_CONSOLE_URL: ${CONSOLE_URL:-http://localhost:3001}
-      THOT_CONSOLE_CLIENT_SECRET: ${CONSOLE_CLIENT_SECRET:-dev-console-secret}
-      THOT_DEV_USER_PASSWORD: ${KEYCLOAK_DEV_USER_PASSWORD:-lecteur}
+      # Valeurs injectées dans keycloak/import/swann-realm.json
+      SWANN_READER_URL: ${READER_URL:-http://localhost:3000}
+      SWANN_READER_CLIENT_SECRET: ${READER_CLIENT_SECRET:-dev-reader-secret}
+      SWANN_CONSOLE_URL: ${CONSOLE_URL:-http://localhost:3001}
+      SWANN_CONSOLE_CLIENT_SECRET: ${CONSOLE_CLIENT_SECRET:-dev-console-secret}
+      SWANN_DEV_USER_PASSWORD: ${KEYCLOAK_DEV_USER_PASSWORD:-lecteur}
     ports:
       - "${KEYCLOAK_PORT:-8080}:8080"
     volumes:
       - ./keycloak/import:/opt/keycloak/data/import:ro
-      # Thème de connexion « thot » (couleurs de la liseuse)
-      - ./keycloak/themes/thot:/opt/keycloak/themes/thot:ro
+      # Thème de connexion « swann » (couleurs de la liseuse)
+      - ./keycloak/themes/swann:/opt/keycloak/themes/swann:ro
     healthcheck:
       # Pas de curl dans l'image : requête HTTP à la main sur le port de gestion
       test:
@@ -109,7 +109,7 @@ services:
 
   qdrant:
     image: qdrant/qdrant:latest
-    container_name: thot_qdrant
+    container_name: swann_qdrant
     restart: unless-stopped
     ports:
       - "${QDRANT_HTTP_PORT:-6333}:6333"   # REST API
@@ -129,7 +129,7 @@ services:
   # Pas de valeur par défaut : ces trois variables sont exigées (voir .env.example).
   garage:
     image: dxflrs/garage:v2.4.1
-    container_name: thot_garage
+    container_name: swann_garage
     restart: unless-stopped
     command: ["/garage", "server", "--single-node", "--default-bucket"]
     environment:
@@ -150,13 +150,13 @@ services:
       retries: 5
 
   # Crée les buckets manquants (livres, boîte de dépôt de la console) avec le code
-  # de thot, puis s'arrête. Même image que l'API.
+  # de swann, puis s'arrête. Même image que l'API.
   buckets:
     build:
       context: .
       dockerfile: corpus-api/Dockerfile
-    image: thot-api
-    container_name: thot_buckets
+    image: swann-api
+    container_name: swann_buckets
     depends_on:
       garage:
         condition: service_healthy
@@ -171,7 +171,7 @@ services:
       - -c
       - |
         import os
-        from thot_core import s3
+        from swann_core import s3
         mc = s3.client(os.environ["MINIO_ENDPOINT"], os.environ["MINIO_ROOT_USER"], os.environ["MINIO_ROOT_PASSWORD"])
         for bucket in (os.environ["MINIO_BOOKS_BUCKET"], os.environ["MINIO_INBOX_BUCKET"]):
             s3.ensure_bucket(mc, bucket)
@@ -179,20 +179,20 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: thot_pgadmin
+    container_name: swann_pgadmin
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@thot.dev}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@swann.dev}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-change-me}
       PGADMIN_CONFIG_SERVER_MODE: "False"
     ports:
       - "${PGADMIN_PORT:-5050}:80"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
-      # Préconfigure la connexion au serveur "Thot" (mot de passe à saisir
+      # Préconfigure la connexion au serveur "Swann" (mot de passe à saisir
       # une fois dans l'UI, non stocké en clair dans ce dépôt).
       - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
 
@@ -205,7 +205,7 @@ services:
     build:
       context: .
       dockerfile: ingest/Dockerfile
-    image: thot-ingest
+    image: swann-ingest
     profiles: ["ingest"]
     depends_on:
       migrate:
@@ -215,7 +215,7 @@ services:
       buckets:
         condition: service_completed_successfully
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-thot}:${POSTGRES_PASSWORD:-thot}@postgres:5432/${POSTGRES_DB:-thot}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-swann}:${POSTGRES_PASSWORD:-swann}@postgres:5432/${POSTGRES_DB:-swann}
       QDRANT_URL: http://qdrant:6333
       QDRANT_API_KEY: ${QDRANT_API_KEY:-}
       QDRANT_COLLECTION: ${QDRANT_COLLECTION:-chunks}
@@ -237,7 +237,7 @@ services:
   # garde les modèles en mémoire. Sur CPU par défaut ; GPU (conseillé) :
   # -f docker-compose.gpu.yml.
   ingest-worker:
-    image: thot-ingest
+    image: swann-ingest
     restart: unless-stopped
     command: ["worker"]
     stop_grace_period: 2m
@@ -249,7 +249,7 @@ services:
       buckets:
         condition: service_completed_successfully
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-thot}:${POSTGRES_PASSWORD:-thot}@postgres:5432/${POSTGRES_DB:-thot}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-swann}:${POSTGRES_PASSWORD:-swann}@postgres:5432/${POSTGRES_DB:-swann}
       QDRANT_URL: http://qdrant:6333
       QDRANT_API_KEY: ${QDRANT_API_KEY:-}
       QDRANT_COLLECTION: ${QDRANT_COLLECTION:-chunks}
@@ -277,7 +277,7 @@ services:
     build:
       context: .
       dockerfile: corpus-api/Dockerfile
-    image: thot-api
+    image: swann-api
     restart: unless-stopped
     depends_on:
       migrate:
@@ -289,7 +289,7 @@ services:
     ports:
       - "${API_PORT:-8000}:8000"
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-thot}:${POSTGRES_PASSWORD:-thot}@postgres:5432/${POSTGRES_DB:-thot}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-swann}:${POSTGRES_PASSWORD:-swann}@postgres:5432/${POSTGRES_DB:-swann}
       QDRANT_URL: http://qdrant:6333
       QDRANT_API_KEY: ${QDRANT_API_KEY:-}
       QDRANT_COLLECTION: ${QDRANT_COLLECTION:-chunks}
@@ -297,9 +297,9 @@ services:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY:?set in .env}
       MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:?set in .env}
       MINIO_BOOKS_BUCKET: ${MINIO_BOOKS_BUCKET:-books}
-      OIDC_ISSUER: ${OIDC_ISSUER:-http://localhost:8080/realms/thot}
+      OIDC_ISSUER: ${OIDC_ISSUER:-http://localhost:8080/realms/swann}
       # localhost:8080 n'existe pas dans le conteneur : clés lues par le réseau interne
-      OIDC_DISCOVERY_URL: http://keycloak:8080/realms/thot
+      OIDC_DISCOVERY_URL: http://keycloak:8080/realms/swann
       OIDC_AUDIENCE: ${OIDC_AUDIENCE:-corpus-api}
       AUTH_DISABLED: ${AUTH_DISABLED:-false}
       API_DEVICE: ${API_DEVICE:-}
@@ -320,7 +320,7 @@ services:
   reader:
     build:
       context: ./reader
-    image: thot-reader
+    image: swann-reader
     restart: unless-stopped
     depends_on:
       databases:
@@ -334,11 +334,11 @@ services:
     environment: &reader-env
       BETTER_AUTH_URL: ${READER_URL:-http://localhost:3000}
       BETTER_AUTH_SECRET: ${READER_AUTH_SECRET:-dev-secret-change-me-dev-secret-change-me}
-      READER_DATABASE_URL: postgresql://${POSTGRES_USER:-thot}:${POSTGRES_PASSWORD:-thot}@postgres:5432/reader
+      READER_DATABASE_URL: postgresql://${POSTGRES_USER:-swann}:${POSTGRES_PASSWORD:-swann}@postgres:5432/reader
       # Émetteur public des jetons ; configuration OpenID lue par le réseau interne
-      OIDC_ISSUER: ${OIDC_ISSUER:-http://localhost:8080/realms/thot}
-      OIDC_DISCOVERY_URL: http://keycloak:8080/realms/thot
-      READER_CLIENT_ID: thot-reader
+      OIDC_ISSUER: ${OIDC_ISSUER:-http://localhost:8080/realms/swann}
+      OIDC_DISCOVERY_URL: http://keycloak:8080/realms/swann
+      READER_CLIENT_ID: swann-reader
       READER_CLIENT_SECRET: ${READER_CLIENT_SECRET:-dev-reader-secret}
       CORPUS_API_URL: ${CORPUS_API_URL:-http://api:8000}
     healthcheck:
@@ -350,7 +350,7 @@ services:
 
   # Suit /v1/changes : recale les progressions quand un texte est remplacé
   reader-worker:
-    image: thot-reader
+    image: swann-reader
     restart: unless-stopped
     depends_on:
       reader:
@@ -361,11 +361,11 @@ services:
     command: ["node", "worker.mjs"]
 
   # Console d'administration (docs/console.md) → http://localhost:3001
-  # Réservée aux rôles corpus:admin / corpus:review (client Keycloak thot-console).
+  # Réservée aux rôles corpus:admin / corpus:review (client Keycloak swann-console).
   console:
     build:
       context: ./console
-    image: thot-console
+    image: swann-console
     restart: unless-stopped
     depends_on:
       databases:
@@ -379,10 +379,10 @@ services:
     environment:
       BETTER_AUTH_URL: ${CONSOLE_URL:-http://localhost:3001}
       BETTER_AUTH_SECRET: ${CONSOLE_AUTH_SECRET:-dev-console-secret-change-me-dev-console}
-      CONSOLE_DATABASE_URL: postgresql://${POSTGRES_USER:-thot}:${POSTGRES_PASSWORD:-thot}@postgres:5432/console
-      OIDC_ISSUER: ${OIDC_ISSUER:-http://localhost:8080/realms/thot}
-      OIDC_DISCOVERY_URL: http://keycloak:8080/realms/thot
-      CONSOLE_CLIENT_ID: thot-console
+      CONSOLE_DATABASE_URL: postgresql://${POSTGRES_USER:-swann}:${POSTGRES_PASSWORD:-swann}@postgres:5432/console
+      OIDC_ISSUER: ${OIDC_ISSUER:-http://localhost:8080/realms/swann}
+      OIDC_DISCOVERY_URL: http://keycloak:8080/realms/swann
+      CONSOLE_CLIENT_ID: swann-console
       CONSOLE_CLIENT_SECRET: ${CONSOLE_CLIENT_SECRET:-dev-console-secret}
       CORPUS_API_URL: ${CORPUS_API_URL:-http://api:8000}
       READER_URL: ${READER_URL:-http://localhost:3000}

@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "Thot — liseuse",
-    short_name: "Thot",
+    name: "Swann — liseuse",
+    short_name: "Swann",
     description: "Lire les grandes œuvres, dans leur langue et en traduction.",
     lang: "fr",
     start_url: "/",

@@ -1,4 +1,4 @@
-# Thot
+# Swann
 
 Deuxième version (réécriture) de `book-ingest` : bibliothèque de livres avec
 recherche vectorielle et RAG.
@@ -25,8 +25,8 @@ docker compose up -d --build  # toute la pile, voir ci-dessous
 | `reader` | http://localhost:3000 | liseuse (utilisateur de dev : `lecteur` / `lecteur`) |
 | `reader-worker` | — | suit `/v1/changes`, recale les progressions |
 | `api` | http://localhost:8000/v1/docs | Corpus API (sur CPU par défaut) |
-| `keycloak` | http://localhost:8080/admin | identité (realm `thot`) |
-| `postgres` | localhost:5432 | bases `thot` (corpus), `keycloak`, `reader` |
+| `keycloak` | http://localhost:8080/admin | identité (realm `swann`) |
+| `postgres` | localhost:5432 | bases `swann` (corpus), `keycloak`, `reader` |
 | `qdrant` / `minio` | :6333 / :9000-9001 | index vectoriels / EPUB |
 | `pgadmin` | http://localhost:5050 | visualisation du schéma |
 | `migrate`, `databases` | — | migrations du corpus, création des bases (puis s'arrêtent) |
@@ -38,7 +38,7 @@ commande à la demande (`docker compose run --rm ingest …`).
 
 Modèles (Qwen3, LaBSE) : volume `hf_cache`, téléchargés au premier
 démarrage ; pour réutiliser ceux de l'hôte :
-`docker run --rm -v thot_hf_cache:/c -v ~/.cache/huggingface/hub:/src:ro alpine sh -c 'mkdir -p /c/hub && cp -a /src/. /c/hub/'`
+`docker run --rm -v swann_hf_cache:/c -v ~/.cache/huggingface/hub:/src:ro alpine sh -c 'mkdir -p /c/hub && cp -a /src/. /c/hub/'`
 puis `HF_HUB_OFFLINE=1` dans `.env` (démarrage plus rapide).
 
 GPU (recherche « thème » ~50 ms au lieu de ~650–900 ms) :
@@ -51,7 +51,7 @@ Vérifications :
 ```bash
 docker compose ps
 curl http://localhost:6333/healthz                    # Qdrant
-docker compose exec postgres pg_isready -U thot       # Postgres
+docker compose exec postgres pg_isready -U swann       # Postgres
 curl http://localhost:9000/minio/health/live          # MinIO
 ```
 
@@ -111,7 +111,7 @@ Noms de dossiers en minuscules sans accents, codes de langue BCP 47 (`fr`,
 servis par l'API), `excerpt` (extraits courts dans la recherche) ou
 `restricted` (métadonnées seulement, **défaut** : une traduction sous droits
 n'est jamais publiée par oubli). Modifier une fiche puis relancer
-`thot extract` met à jour l'édition sans relire l'EPUB.
+`swann extract` met à jour l'édition sans relire l'EPUB.
 
 ### Environnement
 
@@ -120,15 +120,15 @@ n'est jamais publiée par oubli). Modifier une fiche puis relancer
 ```bash
 nix develop                       # python 3.12, uv, psql, dbmate, ruff + libs système
 uv sync --all-packages            # un seul .venv à la racine (core + ingest + corpus-api)
-uv run thot --help
+uv run swann --help
 uv run pytest ingest/tests        # tests (EPUB synthétiques, sans base)
 ```
 
 Les paquets Python forment un espace de travail uv (`pyproject.toml` et
-`uv.lock` à la racine) : `core/` (encodeurs, Qdrant, S3 : `thot_core`) est
+`uv.lock` à la racine) : `core/` (encodeurs, Qdrant, S3 : `swann_core`) est
 partagé par `ingest/` et `corpus-api/`.
 
-**Avec Docker** (image `thot-ingest`, service `ingest` du compose) :
+**Avec Docker** (image `swann-ingest`, service `ingest` du compose) :
 
 ```bash
 docker compose run --rm ingest check
@@ -140,17 +140,19 @@ docker compose -f docker-compose.yml -f docker-compose.gpu.yml run --rm ingest i
 ### Commandes
 
 ```bash
-thot check [--dump DIR]          # valide books/, lit chaque EPUB, vérifie la langue ;
+swann prepare SRC OUT             # range un lot d'EPUB en vrac en OUT/books/ (work.toml,
+                                 # persons.toml, Wikidata, droits, rapport des cas à vérifier)
+swann check [--dump DIR]          # valide books/, lit chaque EPUB, vérifie la langue ;
                                  # --dump écrit le texte extrait (.txt) pour relecture
-thot extract [--workers N]       # EPUB → œuvres, éditions, sections, segments, notes, pages
-thot index create                # nouvel index (EMBEDDING_MODEL, découpage v1)
-thot index run <collection>      # vectorise les éditions pas encore indexées
-thot index activate <collection> # bascule l'alias de recherche vers cet index
-thot index sync-payload          # recopie dans Qdrant les champs modifiables (droits `access`)
-thot index list
-thot align [--work auteur/oeuvre] # aligne les traductions (≥ 2 éditions)
-thot status
-thot search "un meurtre" [--mode theme|quote|words] [--lang fr] [--show en]
+swann extract [--workers N]       # EPUB → œuvres, éditions, sections, segments, notes, pages
+swann index create                # nouvel index (EMBEDDING_MODEL, découpage v1)
+swann index run <collection>      # vectorise les éditions pas encore indexées
+swann index activate <collection> # bascule l'alias de recherche vers cet index
+swann index sync-payload          # recopie dans Qdrant les champs modifiables (droits `access`)
+swann index list
+swann align [--work auteur/oeuvre] # aligne les traductions (≥ 2 éditions)
+swann status
+swann search "un meurtre" [--mode theme|quote|words] [--lang fr] [--show en]
 ```
 
 Modes de recherche : `theme` = sens seul (dense), `quote` = citation (sens +
@@ -158,9 +160,9 @@ mots exacts, fusion RRF), `words` = mots exacts seuls (BM25). `--show en`
 affiche aussi le passage correspondant de l'édition anglaise, via
 l'alignement.
 
-Changer de modèle d'embedding : `thot index create --dense-model … --dim …`,
-`thot index run …`, comparer avec `thot search --collection …`, puis
-`thot index activate …`. L'ancien index reste interrogeable jusqu'à la bascule.
+Changer de modèle d'embedding : `swann index create --dense-model … --dim …`,
+`swann index run …`, comparer avec `swann search --collection …`, puis
+`swann index activate …`. L'ancien index reste interrogeable jusqu'à la bascule.
 
 ### Ce que fait l'extraction
 
@@ -188,7 +190,7 @@ interactive sur `/v1/docs`, contrat OpenAPI sur `/v1/openapi.json`.
 
 ```bash
 # développement : sans Keycloak (AUTH_DISABLED : tous les droits, aucun jeton vérifié)
-AUTH_DISABLED=true HF_HUB_OFFLINE=1 uv run uvicorn thot_api.main:create_app --factory --reload
+AUTH_DISABLED=true HF_HUB_OFFLINE=1 uv run uvicorn swann_api.main:create_app --factory --reload
 curl localhost:8000/v1/health
 curl -X POST localhost:8000/v1/search -H 'content-type: application/json' \
      -d '{"q": "un homme qui se demande s'"'"'il a le droit de tuer", "mode": "theme"}'
@@ -203,17 +205,17 @@ docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d api
   `corpus-api`), rôles `corpus:read`, `corpus:review`, `corpus:admin` (rôles
   du client `corpus-api` ou du realm). Le client Keycloak doit ajouter
   l'audience `corpus-api` aux jetons (mapper « Audience »). En conteneur,
-  `OIDC_DISCOVERY_URL` (`http://keycloak:8080/realms/thot`) sert à lire les
+  `OIDC_DISCOVERY_URL` (`http://keycloak:8080/realms/swann`) sert à lire les
   clés, l'émetteur attendu restant l'URL publique.
 - **Droits sur les textes** : une édition `restricted` (défaut) n'est visible
   que par `corpus:admin` ; `excerpt` = extraits courts dans la recherche ;
   `open` = texte intégral et EPUB.
 - **Encodeur** : le modèle de l'index actif est chargé au démarrage (GPU si
-  disponible, `API_DEVICE`) ; si `thot index activate` change de modèle, l'API
+  disponible, `API_DEVICE`) ; si `swann index activate` change de modèle, l'API
   le recharge d'elle-même (vérification toutes les 30 s).
-- Les tests d'intégration copient la base `thot` dans `thot_api_test`
+- Les tests d'intégration copient la base `swann` dans `swann_api_test`
   (`CREATE DATABASE … TEMPLATE`) : aucune session ne doit être ouverte sur
-  `thot` pendant les tests, sinon ils sont ignorés.
+  `swann` pendant les tests, sinon ils sont ignorés.
 
 ## Keycloak (identité)
 
@@ -222,15 +224,15 @@ docker compose up -d keycloak     # crée les bases keycloak et reader, importe 
 # console : http://localhost:8080/admin (KEYCLOAK_ADMIN / KEYCLOAK_ADMIN_PASSWORD)
 ```
 
-Le realm `thot` est importé au premier démarrage depuis
-`keycloak/import/thot-realm.json`, puis ignoré s'il existe déjà : pour
+Le realm `swann` est importé au premier démarrage depuis
+`keycloak/import/swann-realm.json`, puis ignoré s'il existe déjà : pour
 réappliquer le fichier, supprimer le realm dans la console (ou la base
 `keycloak`) et redémarrer.
 
 | Élément | Rôle |
 | --- | --- |
 | client `corpus-api` | porte les rôles `corpus:read`, `corpus:review`, `corpus:admin` ; audience des jetons |
-| client `thot-reader` | liseuse (BFF Next.js) : code + PKCE pour les lecteurs, compte de service `corpus:read` ; secret `READER_CLIENT_SECRET` |
+| client `swann-reader` | liseuse (BFF Next.js) : code + PKCE pour les lecteurs, compte de service `corpus:read` ; secret `READER_CLIENT_SECRET` |
 | rôle par défaut | tout nouvel inscrit reçoit `corpus:read` |
 | utilisateur `lecteur` | **développement** : mot de passe `KEYCLOAK_DEV_USER_PASSWORD`, tous les rôles `corpus:*` |
 
@@ -238,9 +240,9 @@ Les jetons portent l'émetteur public `KEYCLOAK_URL` ; les conteneurs
 joignent Keycloak par `http://keycloak:8080` (backchannel dynamique).
 Plan et état de la liseuse : [`docs/reader.md`](docs/reader.md).
 
-Thème de connexion : `keycloak/themes/thot` (couleurs de la liseuse), monté
+Thème de connexion : `keycloak/themes/swann` (couleurs de la liseuse), monté
 dans le conteneur et activé par `loginTheme` dans le realm. Sur un realm déjà
-importé : `kcadm.sh update realms/thot -s loginTheme=thot`.
+importé : `kcadm.sh update realms/swann -s loginTheme=swann`.
 
 ## Liseuse (reader/)
 
@@ -267,7 +269,7 @@ En conteneur, la liseuse démarre avec le reste de la pile (`docker compose
 up -d`) ; ses migrations s'appliquent au démarrage, le worker est le service
 `reader-worker`. Après une modification du code : `docker compose up -d --build reader reader-worker`.
 
-Le client Keycloak `thot-reader` n'accepte que `READER_URL`
+Le client Keycloak `swann-reader` n'accepte que `READER_URL`
 (`http://localhost:3000` par défaut) : les tests de bout en bout ont besoin
 du port 3000 libre (`docker compose stop reader` avant `pnpm dev` ou `pnpm test:e2e`).
 
@@ -284,12 +286,12 @@ docker compose logs -f ingest-worker # worker : dépôts, retraitements, alignem
 docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d ingest-worker
 
 # Sans Docker
-thot worker                          # même worker, sur l'hôte (GPU direct)
-thot quality --reparse               # (re)calcule la qualité de toutes les éditions
+swann worker                          # même worker, sur l'hôte (GPU direct)
+swann quality --reparse               # (re)calcule la qualité de toutes les éditions
 cd console && pnpm dev               # console en développement (port 3001)
 ```
 
-La base est la référence des fiches : `thot extract` ne réécrit plus une
+La base est la référence des fiches : `swann extract` ne réécrit plus une
 fiche déjà en base (`--overwrite-metadata` pour forcer le `work.toml`).
 
 ## Schéma Postgres
@@ -411,19 +413,19 @@ docker compose up -d pgadmin
 ```
 
 Puis ouvrir http://localhost:5050 (identifiants `PGADMIN_DEFAULT_EMAIL` /
-`PGADMIN_DEFAULT_PASSWORD` du `.env`). Le serveur **Thot** est préconfiguré
+`PGADMIN_DEFAULT_PASSWORD` du `.env`). Le serveur **Swann** est préconfiguré
 (host `postgres`) ; il suffit de saisir le mot de passe Postgres
 (`POSTGRES_PASSWORD`) à la première connexion. Ensuite, clic droit sur la
-base `thot` → **Generate ERD** pour afficher le diagramme des tables.
+base `swann` → **Generate ERD** pour afficher le diagramme des tables.
 
 ## Stockage de fichiers (MinIO)
 
 Le service `minio` fournit un stockage compatible S3 pour les fichiers
 **EPUB** des éditions, dans le bucket `${MINIO_BOOKS_BUCKET:-books}`.
-`thot extract` crée le bucket au besoin, y envoie chaque EPUB sous la clé
+`swann extract` crée le bucket au besoin, y envoie chaque EPUB sous la clé
 `editions/<sha256>.epub` et la note dans `editions.epub_object_key` ; un
 fichier remplacé donne un nouvel objet et l'ancien est supprimé. Les éditions
-déjà extraites sans EPUB stocké sont complétées au prochain `thot extract`.
+déjà extraites sans EPUB stocké sont complétées au prochain `swann extract`.
 `MINIO_ENDPOINT` vide = pas d'envoi.
 
 Console web sur http://localhost:9001 (identifiants `MINIO_ROOT_USER` /
@@ -437,7 +439,7 @@ Console web sur http://localhost:9001 (identifiants `MINIO_ROOT_USER` /
 ## Structure
 
 ```
-thot/
+swann/
 ├── flake.nix                # environnement de développement (nix develop)
 ├── docker-compose.yml       # postgres, migrations, qdrant, minio, keycloak, api, reader, console, ingest-worker
 ├── docker-compose.gpu.yml   # accès GPU (ingestion, worker, API)
@@ -449,11 +451,11 @@ thot/
 │   └── reader.md            # plan et état de la liseuse
 ├── documentation/           # site de documentation (Barjavel, Mermaid) → GitHub Pages
 ├── books/                   # corpus local (ignoré par git)
-├── core/thot_core/          # partagé : embed/ (Qwen3, BM25), qdrant.py, s3.py (EPUB)
-├── ingest/                  # pipeline d'ingestion (Python, CLI `thot`)
+├── core/swann_core/          # partagé : embed/ (Qwen3, BM25), qdrant.py, s3.py (EPUB)
+├── ingest/                  # pipeline d'ingestion (Python, CLI `swann`)
 │   ├── Dockerfile
 │   ├── tests/
-│   └── thot_ingest/
+│   └── swann_ingest/
 │       ├── catalog.py       # books/ et work.toml
 │       ├── epub/            # conteneur, OPF, table des matières, blocs, notes
 │       ├── text/            # normalisation, titres, structure, segments, langue
@@ -462,7 +464,7 @@ thot/
 │       ├── store/           # Postgres (écriture du corpus, journal des changements)
 │       ├── pipeline/        # extract, index, align, steps (étapes du worker)
 │       ├── jobs.py          # file de tâches (table jobs)
-│       ├── worker.py        # thot worker
+│       ├── worker.py        # swann worker
 │       ├── quality.py       # qualité des éditions (signaux, score)
 │       ├── identify.py      # classement d'un dépôt (auteurs, titres, Wikidata, contenu)
 │       ├── wikidata.py      # client Wikidata (cache en base)
@@ -472,7 +474,7 @@ thot/
 ├── corpus-api/              # Corpus API (FastAPI)
 │   ├── Dockerfile
 │   ├── tests/
-│   └── thot_api/
+│   └── swann_api/
 │       ├── main.py          # application, cycle de vie (pool, Qdrant, S3, encodeur)
 │       ├── auth.py          # jetons Keycloak, rôles, droits `access`
 │       ├── engine.py        # index actif et encodeur de requêtes
@@ -482,7 +484,7 @@ thot/
 │       └── routers/         # catalog, editions, search, alignment, changes, meta, admin*
 ├── reader/                  # liseuse (Next.js 16, PWA) — voir « Liseuse »
 ├── console/                 # console d'administration (Next.js 16) — voir « Console »
-├── keycloak/                # realm importé, thème de connexion « thot »
+├── keycloak/                # realm importé, thème de connexion « swann »
 ├── pgadmin/
 │   └── servers.json         # préconfiguration du serveur pgAdmin
 └── db/

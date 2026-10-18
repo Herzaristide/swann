@@ -7,7 +7,7 @@ import { discoveryBase, env } from "@/lib/env";
 /**
  * Jeton présenté à la Corpus API :
  * - lecteur connecté → son jeton d'accès Keycloak (rafraîchi par Better Auth) ;
- * - sinon → jeton du compte de service `thot-reader` (client_credentials).
+ * - sinon → jeton du compte de service `swann-reader` (client_credentials).
  */
 export async function corpusToken(reqHeaders: Headers): Promise<string> {
   const user = await userToken(reqHeaders);

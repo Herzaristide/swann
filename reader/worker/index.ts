@@ -18,14 +18,14 @@ import type { paths } from "../lib/api/schema";
 import * as schema from "../lib/db/schema";
 
 const env = {
-  db: process.env.READER_DATABASE_URL ?? "postgresql://thot:thot@localhost:5432/reader",
+  db: process.env.READER_DATABASE_URL ?? "postgresql://swann:swann@localhost:5432/reader",
   api: process.env.CORPUS_API_URL ?? "http://localhost:8000",
   realm: (
     process.env.OIDC_DISCOVERY_URL ??
     process.env.OIDC_ISSUER ??
-    "http://localhost:8080/realms/thot"
+    "http://localhost:8080/realms/swann"
   ).replace(/\/$/, ""),
-  clientId: process.env.READER_CLIENT_ID ?? "thot-reader",
+  clientId: process.env.READER_CLIENT_ID ?? "swann-reader",
   clientSecret: process.env.READER_CLIENT_SECRET ?? "dev-reader-secret",
   interval: Number(process.env.WORKER_INTERVAL ?? 60),
 };

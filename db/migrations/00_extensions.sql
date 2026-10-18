@@ -1,6 +1,6 @@
 -- migrate:up
 -- =============================================================================
--- Thot — extensions & fonctions utilitaires
+-- Swann — extensions & fonctions utilitaires
 -- =============================================================================
 
 -- gen_random_uuid()

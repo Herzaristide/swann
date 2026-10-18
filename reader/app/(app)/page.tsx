@@ -47,7 +47,7 @@ export default async function HomePage() {
     <div className="mx-auto max-w-6xl">
       <div className="mb-10">
         <h1 className="font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
-          {sub ? "Bonjour" : "Bienvenue sur Thot"}
+          {sub ? "Bonjour" : "Bienvenue sur Swann"}
         </h1>
         <p className="mt-2 max-w-xl text-muted-foreground">
           Les grandes œuvres dans leur langue et en traduction, côte à côte.

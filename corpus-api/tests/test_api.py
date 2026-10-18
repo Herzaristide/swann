@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from conftest import as_principal
 
-from thot_api.auth import READ, REVIEW
+from swann_api.auth import READ, REVIEW
 
 
 def first_edition(client):

@@ -2,7 +2,7 @@
 import postgres from "postgres";
 
 async function main() {
-  const admin = postgres("postgresql://thot:thot@localhost:5432/postgres", {
+  const admin = postgres("postgresql://swann:swann@localhost:5432/postgres", {
     max: 1,
     onnotice: () => {},
   });

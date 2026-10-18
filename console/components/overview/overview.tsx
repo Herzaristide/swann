@@ -268,7 +268,7 @@ export function OverviewPage() {
           icon={Cpu}
           title="Worker"
           status={alive.length ? "ok" : "error"}
-          detail={alive.length ? null : "Aucun worker actif : les tâches attendent (thot worker)."}
+          detail={alive.length ? null : "Aucun worker actif : les tâches attendent (swann worker)."}
         >
           {alive.map((w) => (
             <div key={w.id}>

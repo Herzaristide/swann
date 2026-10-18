@@ -1,15 +1,15 @@
 ---
 title: Accueil
 group: introduction
-summary: Thot, bibliothèque multilingue d'œuvres littéraires avec recherche par le sens, alignement des traductions, liseuse et console d'administration.
+summary: Swann, bibliothèque multilingue d'œuvres littéraires avec recherche par le sens, alignement des traductions, liseuse et console d'administration.
 links: [architecture, donnees, ingestion, corpus-api, liseuse, console, deploiement, developpement]
 ---
 
-# Thot
+# Swann
 
-Thot est une **bibliothèque d'œuvres littéraires multilingue**. Un même
+Swann est une **bibliothèque d'œuvres littéraires multilingue**. Un même
 livre existe en plusieurs langues et traductions (le *Crime et Châtiment*
-russe, la traduction française de Markowicz, l'anglaise de Garnett…) : Thot
+russe, la traduction française de Markowicz, l'anglaise de Garnett…) : Swann
 les range sous une seule **œuvre**, les rend **cherchables par le sens**
 dans toutes les langues, et **aligne** leurs paragraphes pour passer d'une
 traduction à l'autre sans perdre sa place.
@@ -18,19 +18,19 @@ traduction à l'autre sans perdre sa place.
 
 | Brique | Rôle |
 | --- | --- |
-| **Ingestion** (`ingest/`, CLI `thot`) | lit les EPUB, en extrait la structure et le texte canonique, vectorise, aligne les traductions |
+| **Ingestion** (`ingest/`, CLI `swann`) | lit les EPUB, en extrait la structure et le texte canonique, vectorise, aligne les traductions |
 | **Corpus** (Postgres + Qdrant + MinIO) | métadonnées et texte, index vectoriels, fichiers EPUB |
 | **Corpus API** (`corpus-api/`, FastAPI) | seule porte d'entrée des applications : catalogue, texte, recherche, alignements, flux des changements, administration |
 | **Keycloak** | identité, rôles `corpus:read` / `corpus:review` / `corpus:admin` |
 | **Liseuse** (`reader/`, Next.js PWA) | lire, chercher, lecture parallèle, hors ligne |
 | **Console** (`console/`, Next.js) | déposer des livres, superviser, qualité, fiches, atelier d'alignement |
-| **Worker** (`thot worker`, GPU) | exécute la file de tâches : dépôts, retraitements, alignements, corbeille |
+| **Worker** (`swann worker`, GPU) | exécute la file de tâches : dépôts, retraitements, alignements, corbeille |
 
 ## Vue d'ensemble
 
 ```mermaid
 flowchart LR
-  books[("books/ + work.toml<br/>ou dépôt d'EPUB")] --> ingest["Ingestion<br/>CLI thot / worker GPU"]
+  books[("books/ + work.toml<br/>ou dépôt d'EPUB")] --> ingest["Ingestion<br/>CLI swann / worker GPU"]
   ingest --> corpus[("Corpus<br/>Postgres · Qdrant · MinIO")]
   corpus --> api["Corpus API<br/>FastAPI /v1"]
   api --> reader["Liseuse<br/>Next.js PWA"]

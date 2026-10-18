@@ -6,8 +6,8 @@ from __future__ import annotations
 import pytest
 from conftest import lorem
 
-from thot_ingest.epub.container import DrmError
-from thot_ingest.parse import parse_epub
+from swann_ingest.epub.container import DrmError
+from swann_ingest.parse import parse_epub
 
 
 def sections_by_kind(parsed, kind):
@@ -225,3 +225,77 @@ def test_drm_refused(make_epub):
     epub = make_epub({"c1.xhtml": "<p>x</p>"}, None, extra_files={"META-INF/encryption.xml": enc})
     with pytest.raises(DrmError):
         parse_epub(epub)
+
+
+def test_malformed_xhtml_falls_back_to_html_parser(make_epub):
+    # Balises fermantes orphelines juste après <body> : le parseur XML
+    # (recover) referme le document et perdrait tout le texte.
+    epub = make_epub({"c1.xhtml": f"</span></div></header><pre/><h2>Chapitre I</h2><p>{lorem(40)}</p>"})
+    parsed = parse_epub(epub)
+    assert parsed.stats()["body_chars"] > 1000
+
+
+def test_library_boilerplate_pages_are_dropped(make_epub):
+    # Wolne Lektury : appel aux dons et page éditoriale après le texte
+    epub = make_epub(
+        {
+            "part1.xhtml": f"<h2>Ślizgawka</h2><p>{lorem(5)}</p>",
+            "fund0.xhtml": "<p>Książka, którą czytasz, pochodzi z biblioteki fundacji Wolne Lektury.</p>",
+            "last.xhtml": "<p>Wszystkie zasoby Wolnych Lektur możesz swobodnie wykorzystywać.</p>",
+        }
+    )
+    parsed = parse_epub(epub)
+    text = " ".join(s.text for s in parsed.text.segments)
+    assert "Wolne Lektury" not in text and "Wolnych Lektur" not in text
+    assert "phrase de texte" in text
+
+
+def test_page_named_like_boilerplate_is_kept_without_library_mark(make_epub):
+    epub = make_epub(
+        {"c1.xhtml": f"<p>{lorem(5)}</p>", "last.xhtml": f"<h2>Fin</h2><p>{lorem(5, 'fin')}</p>"}
+    )
+    parsed = parse_epub(epub)
+    assert "phrase de fin" in " ".join(s.text for s in parsed.text.segments)
+
+
+def test_layout_table_poem_is_read(make_epub):
+    # Wikisource : le poème est mis en page dans un tableau
+    poem = "<br/>".join(f"Строка стихотворения номер {i}" for i in range(12))
+    epub = make_epub(
+        {
+            "c1.xhtml": "<table><tbody><tr><td><table class='poetry'><tbody><tr><td>"
+            f"<h4>Раздвоение</h4><div class='poem'><p>{poem}</p></div>"
+            "</td></tr></tbody></table></td></tr></tbody></table>"
+        },
+        language="ru",
+    )
+    parsed = parse_epub(epub)
+    assert "Строка стихотворения номер 11" in " ".join(s.text for s in parsed.text.segments)
+
+
+def test_data_table_is_still_skipped(make_epub):
+    rows = "".join(f"<tr><td>{i}</td><td>{i * 2}</td></tr>" for i in range(20))
+    epub = make_epub({"c1.xhtml": f"<p>{lorem(5)}</p><table>{rows}</table>"})
+    parsed = parse_epub(epub)
+    assert "38" not in " ".join(s.text for s in parsed.text.segments)
+
+
+def test_book_title_mistaken_for_front_matter_heading_becomes_body(make_epub):
+    # « Einführung in … » est le titre du livre, pas une introduction
+    epub = make_epub(
+        {"c1.xhtml": f"<h1>Einführung in die Darstellungsmethoden</h1><p>{lorem(10, 'Inhalt')}</p>"},
+        language="de",
+    )
+    parsed = parse_epub(epub)
+    assert parsed.stats()["body_chars"] > 0
+
+
+def test_short_text_language_mismatch_is_only_a_warning(make_epub):
+    from swann_ingest.catalog import EditionSpec, WorkSpec
+    from swann_ingest.pipeline.extract import parse_all
+
+    epub = make_epub({"c1.xhtml": "<p>This short English text is declared as French in its record.</p>"})
+    work = WorkSpec("a/b", epub.parent, "T", None, None, ["A"], [], None)
+    spec = EditionSpec(epub, "a/b/fr.epub", "fr", True, None, [], None, None)
+    (result,) = parse_all([(work, spec)], workers=1)
+    assert result.error is None

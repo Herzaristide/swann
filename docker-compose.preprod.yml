@@ -3,16 +3,16 @@
 # sont celles qu'ouvre le navigateur, joignable sur le réseau privé (tailnet).
 #   docker compose -f docker-compose.yml -f docker-compose.preprod.yml --env-file .env.preprod up -d --build
 # Réglages : .env.preprod (modèle : .env.preprod.example, jamais commité).
-name: thot-preprod
+name: swann-preprod
 
 x-urls:
   reader: &reader-url http://${PREPROD_HOST:?set in .env.preprod}:${READER_PORT:-8000}
   console: &console-url http://${PREPROD_HOST}:${CONSOLE_PORT:-8001}
-  issuer: &issuer http://${PREPROD_HOST}:${KEYCLOAK_PORT:-8002}/realms/thot
+  issuer: &issuer http://${PREPROD_HOST}:${KEYCLOAK_PORT:-8002}/realms/swann
 
 services:
-  # Les noms fixes du compose de base (thot_postgres…) sont retirés partout : la
-  # préprod (projet thot-preprod) et les piles de dev des worktrees cohabitent.
+  # Les noms fixes du compose de base (swann_postgres…) sont retirés partout : la
+  # préprod (projet swann-preprod) et les piles de dev des worktrees cohabitent.
 
   # Internes : rien n'est publié, les conteneurs se joignent par le réseau compose.
   postgres:
@@ -45,8 +45,8 @@ services:
     command: ["start", "--import-realm", "--http-enabled=true"]
     environment:
       KC_HOSTNAME: http://${PREPROD_HOST}:${KEYCLOAK_PORT:-8002}
-      THOT_READER_URL: *reader-url
-      THOT_CONSOLE_URL: *console-url
+      SWANN_READER_URL: *reader-url
+      SWANN_CONSOLE_URL: *console-url
     ports: !override
       - "${KEYCLOAK_PORT:-8002}:8080"
 

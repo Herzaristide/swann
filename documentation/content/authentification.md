@@ -1,24 +1,24 @@
 ---
 title: Authentification
 group: services
-summary: Keycloak (realm thot), clients, rôles corpus:*, flux OAuth de la liseuse, de la console et des comptes de service, vérification des jetons par l'API.
+summary: Keycloak (realm swann), clients, rôles corpus:*, flux OAuth de la liseuse, de la console et des comptes de service, vérification des jetons par l'API.
 links: [architecture, corpus-api, liseuse, console, deploiement]
 ---
 
 # Authentification et droits
 
-L'identité est entièrement déléguée à **Keycloak** (realm `thot`). Aucune
+L'identité est entièrement déléguée à **Keycloak** (realm `swann`). Aucune
 brique du corpus ne stocke de compte : l'API ne connaît que le `sub` du
 jeton, et chaque application clé ses données sur ce `sub`.
 
-## Realm `thot`
+## Realm `swann`
 
 ```mermaid
 flowchart LR
-  subgraph realm["Realm thot"]
+  subgraph realm["Realm swann"]
     capi["client corpus-api<br/>(audience, porte les rôles)"]
-    cr["client thot-reader<br/>confidentiel, PKCE<br/>+ compte de service corpus:read"]
-    cc["client thot-console<br/>confidentiel"]
+    cr["client swann-reader<br/>confidentiel, PKCE<br/>+ compte de service corpus:read"]
+    cc["client swann-console<br/>confidentiel"]
     def["rôle par défaut<br/>corpus:read"]
     dev["utilisateur lecteur (dev)<br/>tous les rôles corpus:*"]
   end
@@ -34,9 +34,9 @@ flowchart LR
 | `corpus:admin` | éditions `restricted`, supervision, dépôts, fiches, index |
 
 Le realm est importé au premier démarrage depuis
-`keycloak/import/thot-realm.json` (URLs et secrets injectés par variables
+`keycloak/import/swann-realm.json` (URLs et secrets injectés par variables
 d'environnement), puis ignoré s'il existe déjà. Le thème de connexion
-`keycloak/themes/thot` reprend les couleurs de la liseuse.
+`keycloak/themes/swann` reprend les couleurs de la liseuse.
 
 ## Les trois façons d'appeler l'API
 
@@ -57,7 +57,7 @@ sequenceDiagram
   participant DB as Postgres reader
   N->>R: /library (pas de session)
   R-->>N: redirection vers Keycloak (PKCE)
-  N->>K: page de connexion (thème thot)
+  N->>K: page de connexion (thème swann)
   K-->>N: redirection /api/auth/callback?code=…
   N->>R: callback
   R->>K: échange code → jetons (backchannel http://keycloak:8080)
@@ -66,7 +66,7 @@ sequenceDiagram
   R-->>N: cookie de session httpOnly
 ```
 
-La console suit exactement le même schéma avec le client `thot-console`, et
+La console suit exactement le même schéma avec le client `swann-console`, et
 refuse l'accès sans `corpus:admin` ou `corpus:review`.
 
 ## Vérification côté API
@@ -86,8 +86,8 @@ flowchart TB
 ```
 
 - En conteneur, les clés sont lues par le réseau interne
-  (`OIDC_DISCOVERY_URL = http://keycloak:8080/realms/thot`) tandis que
-  l'émetteur attendu reste l'URL publique (`http://localhost:8080/realms/thot`) :
+  (`OIDC_DISCOVERY_URL = http://keycloak:8080/realms/swann`) tandis que
+  l'émetteur attendu reste l'URL publique (`http://localhost:8080/realms/swann`) :
   Keycloak tourne avec `KC_HOSTNAME_BACKCHANNEL_DYNAMIC`.
 - Le client doit ajouter l'audience `corpus-api` aux jetons (mapper
   « Audience »).

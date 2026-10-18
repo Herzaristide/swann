@@ -2,13 +2,13 @@ import { expect, test } from "@playwright/test";
 
 test("un visiteur voit l'accueil et peut se connecter", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Bienvenue sur Thot" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Bienvenue sur Swann" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Se connecter" }).first()).toBeVisible();
 });
 
 test("les pages personnelles demandent une connexion", async ({ page }) => {
   await page.goto("/library");
-  await page.waitForURL(/\/realms\/thot\/protocol\/openid-connect\/auth/);
+  await page.waitForURL(/\/realms\/swann\/protocol\/openid-connect\/auth/);
 });
 
 test("le proxy refuse les routes hors liste blanche", async ({ request }) => {

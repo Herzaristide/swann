@@ -18,14 +18,14 @@ docker compose up -d --build
 
 | Service | Adresse | Rôle |
 | --- | --- | --- |
-| `postgres` | :5432 | bases `thot` (corpus), `keycloak`, `reader`, `console` |
+| `postgres` | :5432 | bases `swann` (corpus), `keycloak`, `reader`, `console` |
 | `migrate` | — | applique `db/migrations/` (dbmate), puis s'arrête |
 | `databases` | — | crée les bases `keycloak`, `reader`, `console` (idempotent), puis s'arrête |
-| `keycloak` | :8080/admin | identité, realm `thot` |
+| `keycloak` | :8080/admin | identité, realm `swann` |
 | `qdrant` | :6333 / :6334 | index vectoriels (REST / gRPC) |
 | `minio` | :9000 / :9001 | EPUB (API S3 / console web) |
 | `api` | :8000/v1/docs | Corpus API |
-| `ingest-worker` | — | `thot worker`, file de tâches, permanent |
+| `ingest-worker` | — | `swann worker`, file de tâches, permanent |
 | `reader` | :3000 | liseuse |
 | `reader-worker` | — | suit `/v1/changes`, recale les progressions |
 | `pgadmin` | :5050 | visualisation du schéma (ERD Tool) |
@@ -73,7 +73,7 @@ dépendances sont prêtes.
 Pour réutiliser les modèles déjà présents sur l'hôte :
 
 ```bash
-docker run --rm -v thot_hf_cache:/c -v ~/.cache/huggingface/hub:/src:ro alpine \
+docker run --rm -v swann_hf_cache:/c -v ~/.cache/huggingface/hub:/src:ro alpine \
   sh -c 'mkdir -p /c/hub && cp -a /src/. /c/hub/'
 ```
 
@@ -103,7 +103,7 @@ flowchart LR
 
 Les jetons portent toujours l'**émetteur public** (`KEYCLOAK_URL`,
 `http://localhost:8080`), tandis que les conteneurs joignent Keycloak par le
-réseau interne (`KC_HOSTNAME_BACKCHANNEL_DYNAMIC`). Le client `thot-reader`
+réseau interne (`KC_HOSTNAME_BACKCHANNEL_DYNAMIC`). Le client `swann-reader`
 n'accepte que `READER_URL` comme redirection.
 
 ## Vérifications
@@ -112,7 +112,7 @@ n'accepte que `READER_URL` comme redirection.
 docker compose ps
 curl http://localhost:8000/v1/health                  # API
 curl http://localhost:6333/healthz                    # Qdrant
-docker compose exec postgres pg_isready -U thot       # Postgres
+docker compose exec postgres pg_isready -U swann       # Postgres
 curl http://localhost:9000/minio/health/live          # MinIO
 ```
 

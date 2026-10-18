@@ -42,7 +42,7 @@ applications lisent `/v1/changes` à leur rythme, chacune avec son curseur.
 sequenceDiagram
   autonumber
   participant I as Ingestion / API admin
-  participant P as Postgres (thot)
+  participant P as Postgres (swann)
   participant A as Corpus API
   participant W as reader-worker
   participant R as Postgres (reader)

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from thot_ingest import quality
-from thot_ingest.identify import (
+from swann_ingest import quality
+from swann_ingest.identify import (
     _translit,
     clean_person_name,
     edition_language,
@@ -12,7 +12,7 @@ from thot_ingest.identify import (
     title_key,
     year_of_date,
 )
-from thot_ingest.text.language import detect_majority
+from swann_ingest.text.language import detect_majority
 
 
 def test_title_key_drops_articles_and_subtitles():

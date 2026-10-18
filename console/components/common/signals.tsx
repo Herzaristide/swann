@@ -1,7 +1,7 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-/** Libellés des signaux de qualité (codes stables de thot_ingest.quality). */
+/** Libellés des signaux de qualité (codes stables de swann_ingest.quality). */
 export const SIGNALS: Record<string, { label: string; severity: "high" | "medium" | "low" }> = {
   empty_body: { label: "Corps vide", severity: "high" },
   language_mismatch: { label: "Langue incohérente", severity: "high" },

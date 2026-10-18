@@ -1,4 +1,4 @@
-/** Ibis stylisé (Thot) et nom de l'application. */
+/** Ibis stylisé (Swann) et nom de l'application. */
 export function Logo({ compact = false }: { compact?: boolean }) {
   return (
     <span className="inline-flex items-center gap-2 font-serif text-lg font-semibold tracking-tight">
@@ -16,7 +16,7 @@ export function Logo({ compact = false }: { compact?: boolean }) {
           strokeLinecap="round"
         />
       </svg>
-      {!compact && <span>Thot</span>}
+      {!compact && <span>Swann</span>}
     </span>
   );
 }

@@ -21,7 +21,7 @@ restent dans la CLI ») :
 - **Postgres est la référence** pour les œuvres, éditions, personnes et
   courants ; Qdrant en est l'index (son payload est recopié depuis Postgres
   à chaque modification). `books/` et les `work.toml` deviennent **une voie
-  d'import parmi d'autres** : `thot extract` crée ce qui manque mais **ne
+  d'import parmi d'autres** : `swann extract` crée ce qui manque mais **ne
   réécrit plus une fiche existante** (option `--overwrite-metadata` pour le
   comportement actuel).
 - **L'ingestion classe elle-même** un livre déposé : une traduction française
@@ -29,7 +29,7 @@ restent dans la CLI ») :
   créée si elle n'existe pas (§4).
 - **L'API écrit** pour l'administration (rôle `corpus:admin`) et confie les
   traitements lourds à un **worker GPU permanent** via une file de tâches dans
-  Postgres. La CLI `thot` reste utilisable et ses exécutions apparaissent
+  Postgres. La CLI `swann` reste utilisable et ses exécutions apparaissent
   dans la console.
 - **Le texte n'est pas modifiable** dans la console : il vient de l'EPUB. Pour
   le corriger, on redépose un EPUB (nouvelle révision de la même édition).
@@ -39,7 +39,7 @@ restent dans la CLI ») :
 
 ```
 navigateur                         console/ (Next.js, serveur)
- └─ pages React  ───────────────►  ├─ /api/auth/*    Better Auth ──OIDC──► Keycloak (client thot-console)
+ └─ pages React  ───────────────►  ├─ /api/auth/*    Better Auth ──OIDC──► Keycloak (client swann-console)
                                    ├─ /api/corpus/*  proxy BFF  ──JWT───► corpus-api /v1 et /v1/admin
                                    └─ /api/stream    relais SSE ◄────────  corpus-api /v1/admin/stream
 
@@ -47,7 +47,7 @@ corpus-api ──► Postgres : jobs, ingestions, edition_quality, corpus_events
            ──► MinIO    : bucket `inbox` (dépôts) puis `books`
            ──► Qdrant   : état des collections (lecture)
 
-ingest-worker (thot worker, GPU, permanent)
+ingest-worker (swann worker, GPU, permanent)
    LISTEN jobs ─► identify → extract → quality → index → align ─► Postgres / Qdrant / MinIO
               └─► progression (jobs.progress) + pg_notify ─► API ─► SSE ─► console
 ```
@@ -73,7 +73,7 @@ CREATE TYPE job_kind AS ENUM (
   'align',         -- réalignement d'une œuvre (option : à partir d'une section)
   'sync_payload',  -- recopie fiche → payload Qdrant (titre, droits…)
   'delete_edition',
-  'import_books'   -- import en lot de books/ (équivalent de thot extract)
+  'import_books'   -- import en lot de books/ (équivalent de swann extract)
 );
 CREATE TYPE job_status AS ENUM (
   'queued', 'running', 'needs_review', 'succeeded', 'failed', 'cancelled'
@@ -101,7 +101,7 @@ ALTER TABLE ingestions ADD COLUMN stage TEXT;  -- extract | index | align
 - `ingestions` reste le journal par édition et par étape ; `jobs` porte ce
   que l'utilisateur a demandé et l'avancement d'un lot (un dépôt de 50 EPUB =
   un job parent et 50 enfants).
-- **Worker** : `thot worker`, service compose `ingest-worker` permanent avec
+- **Worker** : `swann worker`, service compose `ingest-worker` permanent avec
   `devices: nvidia.com/gpu=all` (CDI : `hardware.nvidia-container-toolkit.enable
   = true;` dans la config NixOS). Il garde Qwen3-Embedding-0.6B et LaBSE
   chargés (~2,5 Go sur les 8 Go de la 3070) et traite **une tâche GPU à la
@@ -110,7 +110,7 @@ ALTER TABLE ingestions ADD COLUMN stage TEXT;  -- extract | index | align
 - **Annulation** : `cancelled` est lu entre deux étapes ; une édition à moitié
   écrite est annulée par transaction (extract) ou reprise (index, align : déjà
   idempotents).
-- La CLI (`thot extract`, `index run`, `align`) crée aussi une ligne `jobs`
+- La CLI (`swann extract`, `index run`, `align`) crée aussi une ligne `jobs`
   (`created_by_sub = 'cli'`) pour que ses exécutions soient visibles.
 
 ## 4. Dépôt et classement automatique
@@ -222,7 +222,7 @@ Table `edition_quality` (une ligne par édition), en deux parties :
   `structure_method` (toc / headings), avertissements (`jsonb`), langue
   détectée, présence d'une table des matières, sections non résolues.
 - **Calculé depuis la base** par l'étape `quality` du worker (aussi après un
-  `reprocess`, ou en lot par `thot quality`) : nombre de chapitres, notes,
+  `reprocess`, ou en lot par `swann quality`) : nombre de chapitres, notes,
   appels de note orphelins, segments du corps, longueur moyenne et maximale des
   segments, part du texte hors corps, sections vides, pages, chunks par index.
 
@@ -292,7 +292,7 @@ Biome, Vitest, Playwright), plus :
 - glisser-déposer natif pour les dépôts, progression par fichier.
 
 Pas de PWA ni de hors ligne : outil de bureau, mais lisible sur téléphone
-(supervision). Port `${CONSOLE_PORT:-3001}`, client Keycloak `thot-console`
+(supervision). Port `${CONSOLE_PORT:-3001}`, client Keycloak `swann-console`
 (confidentiel, redirection `http://localhost:3001/*`), accès refusé sans
 `corpus:admin` ou `corpus:review`.
 
@@ -314,11 +314,11 @@ Pages :
 
 | # | Étape | Livrable vérifiable |
 | --- | --- | --- |
-| 0 | **Migration** : `jobs`, `ingestions.job_id/stage`, `edition_quality`, `quality_acks` ; `extract` ne réécrit plus les fiches existantes | migrations appliquées ; `thot extract` sur books/ ne change rien |
-| 1 | **Worker** : `thot worker` (file, battement, annulation), étapes extract / quality / index / align ; jobs créés par la CLI ; service `ingest-worker` GPU (CDI activé sur l'hôte) | un job `import_books` traite books/ ; `docker compose up` lance le worker sur GPU |
-| 2 | **Qualité** : mesures au parsing + étape `quality` + `thot quality` | signaux calculés pour les 36 éditions |
+| 0 | **Migration** : `jobs`, `ingestions.job_id/stage`, `edition_quality`, `quality_acks` ; `extract` ne réécrit plus les fiches existantes | migrations appliquées ; `swann extract` sur books/ ne change rien |
+| 1 | **Worker** : `swann worker` (file, battement, annulation), étapes extract / quality / index / align ; jobs créés par la CLI ; service `ingest-worker` GPU (CDI activé sur l'hôte) | un job `import_books` traite books/ ; `docker compose up` lance le worker sur GPU |
+| 2 | **Qualité** : mesures au parsing + étape `quality` + `swann quality` | signaux calculés pour les 36 éditions |
 | 3 | **API admin, lecture** : overview, jobs, quality, consistency, stream SSE | tests sur base jetable ; flux SSE visible avec `curl -N` |
-| 4 | **Console, socle et supervision** : `console/`, auth `thot-console`, vue d'ensemble, tâches, qualité, index | suivre en direct un import lancé par la CLI |
+| 4 | **Console, socle et supervision** : `console/`, auth `swann-console`, vue d'ensemble, tâches, qualité, index | suivre en direct un import lancé par la CLI |
 | 5 | **Dépôt et classement** : `/admin/uploads`, identification (§4.2), `needs_review` et résolution | déposer une traduction d'une œuvre existante (rattachée) et un livre inconnu (œuvre créée) |
 | 6 | **Édition** : fiches, fusions, déplacement, structure + `reprocess`, historique | corriger une section mal typée → réindexée, visible dans la liseuse |
 | 7 | **Atelier d'alignement** : liste, carte, côte à côte éditable, échantillons et précision, réalignement | corriger un passage en↔ru de notes-from-underground |
@@ -354,11 +354,11 @@ Pages :
   0,44–0,56, autre œuvre du même auteur 0 ; adaptations et recueils
   réordonnés tombent bas (0,06–0,13) et passent en validation manuelle.
 - **Langue détectée** : vote sur trois extraits du corps (un extrait plein de
-  noms propres trompait lingua) ; aussi utilisé par `thot extract`.
+  noms propres trompait lingua) ; aussi utilisé par `swann extract`.
 - **Console** : pas de TanStack Table ni de Recharts (le tri, les filtres et
   la pagination sont faits par l'API ; barres en CSS). Rôle relecteur : seul
   l'atelier d'alignement est accessible.
-- **Index** : la création d'un index reste dans la CLI (`thot index create`) ;
+- **Index** : la création d'un index reste dans la CLI (`swann index create`) ;
   la console montre l'avancement et active un index.
 - **Changement de l'édition de référence** d'une œuvre : pas encore (la
   référence reste l'originale, sinon la plus longue).

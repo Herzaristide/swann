@@ -6,8 +6,8 @@ import { toast } from "sonner";
 
 type BeforeInstallPromptEvent = Event & { prompt: () => Promise<void> };
 
-const VISITS_KEY = "thot:visits";
-const DISMISSED_KEY = "thot:install-dismissed";
+const VISITS_KEY = "swann:visits";
+const DISMISSED_KEY = "swann:install-dismissed";
 
 /**
  * Bandeau « nouvelle version » (mise à jour à la demande, jamais en pleine
@@ -54,7 +54,7 @@ export function Pwa() {
     const onPrompt = (e: Event) => {
       e.preventDefault();
       const evt = e as BeforeInstallPromptEvent;
-      toast("Installer Thot sur cet appareil ?", {
+      toast("Installer Swann sur cet appareil ?", {
         description: "Lecture plein écran, et hors ligne pour les livres téléchargés.",
         duration: 15000,
         action: { label: "Installer", onClick: () => void evt.prompt().finally(dismiss) },
@@ -68,7 +68,7 @@ export function Pwa() {
       /iphone|ipad|ipod/i.test(navigator.userAgent) &&
       !("standalone" in navigator && navigator.standalone);
     if (ios) {
-      toast("Installer Thot", {
+      toast("Installer Swann", {
         description: "Touchez Partager, puis « Sur l'écran d'accueil ».",
         duration: 12000,
         onDismiss: dismiss,

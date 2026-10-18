@@ -61,7 +61,7 @@ class ReaderDB extends Dexie {
   kv!: EntityTable<{ key: string; value: unknown }, "key">;
 
   constructor() {
-    super("thot-reader");
+    super("swann-reader");
     this.version(1).stores({
       outbox: "key, createdAt",
       books: "key, editionId, downloadedAt",

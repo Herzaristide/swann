@@ -5,10 +5,10 @@ import { loadViewer } from "@/lib/me";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "Thot", template: "%s · Thot" },
+  title: { default: "Swann", template: "%s · Swann" },
   description: "Lire les grandes œuvres, dans leur langue et en traduction.",
-  applicationName: "Thot",
-  appleWebApp: { capable: true, title: "Thot", statusBarStyle: "default" },
+  applicationName: "Swann",
+  appleWebApp: { capable: true, title: "Swann", statusBarStyle: "default" },
   formatDetection: { telephone: false },
 };
 

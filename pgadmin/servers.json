@@ -1,12 +1,12 @@
 {
   "Servers": {
     "1": {
-      "Name": "Thot",
+      "Name": "Swann",
       "Group": "Servers",
       "Host": "postgres",
       "Port": 5432,
-      "MaintenanceDB": "thot",
-      "Username": "thot",
+      "MaintenanceDB": "swann",
+      "Username": "swann",
       "SSLMode": "prefer"
     }
   }

@@ -5,11 +5,11 @@ import { z } from "zod";
 const schema = z.object({
   BETTER_AUTH_URL: z.url().default("http://localhost:3001"),
   BETTER_AUTH_SECRET: z.string().min(32),
-  CONSOLE_DATABASE_URL: z.string().default("postgresql://thot:thot@localhost:5432/console"),
+  CONSOLE_DATABASE_URL: z.string().default("postgresql://swann:swann@localhost:5432/console"),
   // Émetteur public des jetons (iss) et URL du realm joignable depuis ce serveur
-  OIDC_ISSUER: z.url().default("http://localhost:8080/realms/thot"),
+  OIDC_ISSUER: z.url().default("http://localhost:8080/realms/swann"),
   OIDC_DISCOVERY_URL: z.url().optional(),
-  CONSOLE_CLIENT_ID: z.string().default("thot-console"),
+  CONSOLE_CLIENT_ID: z.string().default("swann-console"),
   CONSOLE_CLIENT_SECRET: z.string().min(1),
   CORPUS_API_URL: z.url().default("http://localhost:8000"),
   // Lien vers la liseuse (ouvrir une édition)

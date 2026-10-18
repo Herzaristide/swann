@@ -5,13 +5,13 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from thot_core.embed import sparse
-from thot_ingest.align.dp import align
-from thot_ingest.catalog import scan
-from thot_ingest.chunking.v1 import MAX_TOKENS, MIN_TOKENS, chunk_spans, plan_chunks
-from thot_ingest.epub.blocks import Span
-from thot_ingest.text.headings import parse_heading, roman_to_int
-from thot_ingest.text.segment import render_markup, split_points
+from swann_core.embed import sparse
+from swann_ingest.align.dp import align
+from swann_ingest.catalog import scan
+from swann_ingest.chunking.v1 import MAX_TOKENS, MIN_TOKENS, chunk_spans, plan_chunks
+from swann_ingest.epub.blocks import Span
+from swann_ingest.text.headings import parse_heading, roman_to_int
+from swann_ingest.text.segment import render_markup, split_points
 
 
 @pytest.mark.parametrize(
@@ -161,3 +161,15 @@ def test_catalog_edition_access(tmp_path):
     catalog = scan(tmp_path)
     assert catalog.works == []
     assert any("access" in i.message or "access" in str(i.path) for i in catalog.issues)
+
+
+def test_language_detection_short_and_pre_reform_russian():
+    from swann_ingest.text.language import detect_language
+
+    assert detect_language("Помогите, братцы! Больше нету мочи! Я — полукрестьянин, Я — полурабочий.") == "ru"
+    assert (
+        detect_language(
+            "Вѣтеръ воетъ, вьюга злится, и снѣгъ кружится надъ полемъ; тихо всё въ деревнѣ спитъ."
+        )
+        == "ru"
+    )

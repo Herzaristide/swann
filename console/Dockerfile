@@ -1,4 +1,4 @@
-# Console d'administration Thot (Next.js, sortie `standalone`).
+# Console d'administration Swann (Next.js, sortie `standalone`).
 # Contexte de build = dossier console/ :
 #   docker compose up -d console
 FROM node:22-alpine AS base

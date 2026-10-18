@@ -92,5 +92,5 @@ flowchart LR
   factice ; `HF_HUB_OFFLINE=1` évite ~40 s d'interrogation du Hub.
 - Connexions Postgres avec `jit=off` : la compilation JIT coûtait ~300 ms
   sur les requêtes récursives pour un gain nul.
-- Le même code d'encodage (`thot_core.embed`) sert à l'ingestion et à l'API :
+- Le même code d'encodage (`swann_core.embed`) sert à l'ingestion et à l'API :
   requêtes et documents sont dans le même espace.

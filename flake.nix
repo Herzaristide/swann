@@ -1,5 +1,5 @@
 {
-  description = "Thot : bibliothèque de livres avec recherche vectorielle";
+  description = "Swann : bibliothèque de livres avec recherche vectorielle";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
@@ -51,7 +51,7 @@
               export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.stdenv.cc.cc.lib pkgs.zlib ]}:/run/opengl-driver/lib''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
               if [ -f .env ]; then set -a; . ./.env; set +a; fi
               # dbmate lit DATABASE_URL ; sslmode=disable car Postgres local sans TLS.
-              export DATABASE_URL=''${DATABASE_URL:-postgresql://thot:thot@localhost:5432/thot?sslmode=disable}
+              export DATABASE_URL=''${DATABASE_URL:-postgresql://swann:swann@localhost:5432/swann?sslmode=disable}
             '';
           };
         });
