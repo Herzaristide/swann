@@ -90,6 +90,20 @@ docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
 `hardware.nvidia-container-toolkit.enable = true;`). Recherche « thème » :
 ~50 ms par requête au lieu de ~650–900 ms sur CPU.
 
+### GPU AMD (ROCm)
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.amd.yml build ingest
+docker compose -f docker-compose.yml -f docker-compose.amd.yml run --rm ingest index run <collection>
+```
+
+`docker-compose.amd.yml` construit `swann-ingest:rocm` (`TORCH_BACKEND=rocm` :
+torch pris sur l'index ROCm de PyTorch, à la version du lock, sans la pile
+CUDA) et donne `/dev/kfd` et `/dev/dri` à `ingest` et `ingest-worker` ; l'API
+reste sur CPU. Image ~24 Go. RX 7600 XT (gfx1102) : `HSA_OVERRIDE_GFX_VERSION=11.0.0`
+et `HIP_VISIBLE_DEVICES=0` (écarte l'iGPU), valeurs par défaut du fichier.
+Mesuré : ~8 600 tokens/s pour Qwen3-Embedding-0.6B.
+
 ## Réseau : URL publiques et internes
 
 ```mermaid

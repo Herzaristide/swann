@@ -1,0 +1,28 @@
+# Accès au GPU AMD (ROCm) pour l'ingestion (vectorisation, alignement).
+# L'image swann-ingest:rocm installe torch depuis l'index ROCm de PyTorch
+# (ingest/Dockerfile, TORCH_BACKEND=rocm) ; l'API reste sur CPU.
+#
+# Prérequis côté hôte : pilote amdgpu, /dev/kfd et /dev/dri lisibles.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.amd.yml build ingest
+#   docker compose -f docker-compose.yml -f docker-compose.amd.yml run --rm ingest index run <collection>
+x-amd: &amd
+  build:
+    context: .
+    dockerfile: ingest/Dockerfile
+    args:
+      TORCH_BACKEND: rocm
+  image: swann-ingest:rocm
+  devices:
+    - /dev/kfd
+    - /dev/dri
+  environment:
+    # RX 7600 (gfx1102) : absente de la liste officielle de ROCm, elle tourne
+    # avec les noyaux gfx1100.
+    HSA_OVERRIDE_GFX_VERSION: ${HSA_OVERRIDE_GFX_VERSION:-11.0.0}
+    # Carte(s) visibles par torch : écarte l'iGPU des Ryzen.
+    HIP_VISIBLE_DEVICES: ${HIP_VISIBLE_DEVICES:-0}
+
+services:
+  ingest: *amd
+  ingest-worker: *amd
